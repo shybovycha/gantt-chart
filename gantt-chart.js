@@ -136,9 +136,18 @@ const createPolylineData = (rectangleData, elementHeight) => {
           parent.xEnd, (parent.y + (elementHeight / 2))
         ];
 
+        let strokeDash = '0';
+        let stroke = color;
+
+        if (d.errors.length > 0) {
+          strokeDash = '3';
+          stroke = '#d33';
+        }
+
         return {
           points: points.join(','),
-          color
+          stroke,
+          strokeDash
         };
       })
   );
@@ -170,6 +179,8 @@ const createElementData = (data, elementHeight, xScale, fontSize) =>
     const labelX = x + ((width / 2) - ((label.length / 2) * singleCharWidth));
     const labelY = y + ((height / 2) + (singleCharHeight));
 
+    const errors = d.errors;
+
     return {
       x,
       y,
@@ -181,7 +192,8 @@ const createElementData = (data, elementHeight, xScale, fontSize) =>
       label,
       labelX,
       labelY,
-      tooltip
+      tooltip,
+      errors
     };
   });
 
@@ -214,7 +226,8 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
       .enter()
       .append('polyline')
       .style('fill', 'none')
-      .style('stroke', d => d.color)
+      .style('stroke', d => d.stroke)
+      .style('stroke-dasharray', d => d.strokeDash)
       .attr('points', d => d.points);
   }
 
@@ -238,7 +251,7 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
     .attr('y', d => d.y)
     .attr('width', d => d.width)
     .attr('height', d => d.height)
-    .style('fill', '#ddd')
+    .style('fill', d => d.errors.length > 0 ? '#d33' : '#ddd')
     .style('stroke', 'black');
 
   bars
@@ -252,6 +265,16 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
   bars
     .append('title')
     .text(d => d.tooltip);
+};
+
+const detectConflicts = data => {
+  const dataCache = createDataCacheById(data);
+
+  return data.map(milestone => {
+    const errorousDependencies = milestone.dependsOn.filter(dependencyId => dataCache[dependencyId].startDate >= milestone.startDate);
+    milestone.errors = (milestone.errors || []).concat(errorousDependencies.map(errorId => `Dependency ${errorId} must end before this milestone`));
+    return milestone;
+  });
 };
 
 export const createGanttChart = (placeholder, data, { elementHeight, sortMode = 'date', showRelations = true, svgOptions }) => {
@@ -271,6 +294,7 @@ export const createGanttChart = (placeholder, data, { elementHeight, sortMode = 
 
   data = parseUserData(data); // transform raw user data to valid values
   data = sortElements(data, sortMode);
+  data = detectConflicts(data);
 
   let { minStartDate, maxEndDate } = findDateBoundaries(data);
 
