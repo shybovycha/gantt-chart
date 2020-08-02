@@ -1,4 +1,7 @@
-import * as d3 from 'd3';
+import { axisBottom } from 'd3-axis';
+import { scaleTime } from 'd3-scale';
+import { select } from 'd3-selection';
+
 import moment from 'moment';
 
 const prepareDataElement = ({ id, label, startDate, endDate, duration, dependsOn }) => {
@@ -189,16 +192,16 @@ const createElementData = (data, elementHeight, xScale, fontSize) =>
 
 const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight, scaleWidth, fontSize, minStartDate, maxEndDate, margin, showRelations }) => {
   // create container element for the whole chart
-  const svg = d3.select(placeholder).append('svg').attr('width', svgWidth).attr('height', svgHeight);
+  const svg = select(placeholder).append('svg').attr('width', svgWidth).attr('height', svgHeight);
 
-  const xScale = d3.scaleTime()
+  const xScale = scaleTime()
     .domain([minStartDate.toDate(), maxEndDate.toDate()])
     .range([0, scaleWidth]);
 
   // prepare data for every data element
   const rectangleData = createElementData(data, elementHeight, xScale, fontSize);
 
-  const xAxis = d3.axisBottom(xScale);
+  const xAxis = axisBottom(xScale);
 
   // create container for the data
   const g1 = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
