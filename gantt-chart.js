@@ -2,25 +2,28 @@ import { axisBottom } from 'd3-axis';
 import { scaleTime } from 'd3-scale';
 import { select } from 'd3-selection';
 
-import moment from 'moment';
-
 const prepareDataElement = ({ id, label, startDate, endDate, duration, dependsOn }) => {
   if ((!startDate || !endDate) && !duration) {
     throw new Error('Wrong element format: should contain either startDate and duration, or endDate and duration or startDate and endDate');
   }
 
-  if (startDate) startDate = moment(startDate);
+  startDate = startDate && startDate.getTime();
+  endDate = endDate && endDate.getTime();
 
-  if (endDate) endDate = moment(endDate);
+  // if (startDate) startDate = moment(startDate);
+
+  // if (endDate) endDate = moment(endDate);
 
   if (startDate && !endDate && duration) {
-    endDate = moment(startDate);
-    endDate.add(duration[0], duration[1]);
+    endDate = startDate + duration;
+    // endDate = moment(startDate);
+    // endDate.add(duration[0], duration[1]);
   }
 
   if (!startDate && endDate && duration) {
-    startDate = moment(endDate);
-    startDate.subtract(duration[0], duration[1]);
+    startDate = endDate - duration;
+    // startDate = moment(endDate);
+    // startDate.subtract(duration[0], duration[1]);
   }
 
   if (!dependsOn)
@@ -40,13 +43,13 @@ const findDateBoundaries = data => {
   let minStartDate, maxEndDate;
 
   data.forEach(({ startDate, endDate }) => {
-    if (!minStartDate || startDate.isBefore(minStartDate)) minStartDate = moment(startDate);
+    if (!minStartDate || startDate < minStartDate) minStartDate = startDate;
 
-    if (!minStartDate || endDate.isBefore(minStartDate)) minStartDate = moment(endDate);
+    if (!minStartDate || endDate < minStartDate) minStartDate = endDate;
 
-    if (!maxEndDate || endDate.isAfter(maxEndDate)) maxEndDate = moment(endDate);
+    if (!maxEndDate || endDate > maxEndDate) maxEndDate = endDate;
 
-    if (!maxEndDate || startDate.isAfter(maxEndDate)) maxEndDate = moment(startDate);
+    if (!maxEndDate || startDate > maxEndDate) maxEndDate = startDate;
   });
 
   return {
@@ -95,7 +98,7 @@ const sortElementsByChildrenCount = data => {
 
 const sortElementsByEndDate = data =>
   data.sort((e1, e2) => {
-    if (moment(e1.endDate).isBefore(moment(e2.endDate)))
+    if (e1.endDate < e2.endDate)
       return -1;
     else
       return 1;
@@ -151,8 +154,8 @@ const createPolylineData = (rectangleData, elementHeight) => {
 
 const createElementData = (data, elementHeight, xScale, fontSize) =>
   data.map((d, i) => {
-    const x = xScale(d.startDate.toDate());
-    const xEnd = xScale(d.endDate.toDate());
+    const x = xScale(d.startDate);
+    const xEnd = xScale(d.endDate);
     const y = i * elementHeight * 1.5;
     const width = xEnd - x;
     const height = elementHeight;
@@ -195,7 +198,7 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
   const svg = select(placeholder).append('svg').attr('width', svgWidth).attr('height', svgHeight);
 
   const xScale = scaleTime()
-    .domain([minStartDate.toDate(), maxEndDate.toDate()])
+    .domain([minStartDate, maxEndDate])
     .range([0, scaleWidth]);
 
   // prepare data for every data element
@@ -277,11 +280,11 @@ export const createGanttChart = (placeholder, data, { elementHeight, sortMode = 
   data = parseUserData(data); // transform raw user data to valid values
   data = sortElements(data, sortMode);
 
-  const { minStartDate, maxEndDate } = findDateBoundaries(data);
+  let { minStartDate, maxEndDate } = findDateBoundaries(data);
 
   // add some padding to axes
-  minStartDate.subtract(2, 'days');
-  maxEndDate.add(2, 'days');
+  minStartDate -= 2 * 24 * 60 * 60 * 1000; // .subtract(2, 'days');
+  maxEndDate += 2 * 24 * 60 * 60 * 1000; // .add(2, 'days');
 
   createChartSVG(data, placeholder, { svgWidth, svgHeight, scaleWidth, elementHeight, scaleHeight, fontSize, minStartDate, maxEndDate, margin, showRelations });
 };
