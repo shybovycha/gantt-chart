@@ -10,20 +10,12 @@ const prepareDataElement = ({ id, label, startDate, endDate, duration, dependsOn
   startDate = startDate && startDate.getTime();
   endDate = endDate && endDate.getTime();
 
-  // if (startDate) startDate = moment(startDate);
-
-  // if (endDate) endDate = moment(endDate);
-
   if (startDate && !endDate && duration) {
     endDate = startDate + duration;
-    // endDate = moment(startDate);
-    // endDate.add(duration[0], duration[1]);
   }
 
   if (!startDate && endDate && duration) {
     startDate = endDate - duration;
-    // startDate = moment(endDate);
-    // startDate.subtract(duration[0], duration[1]);
   }
 
   if (!dependsOn)
@@ -283,8 +275,8 @@ export const createGanttChart = (placeholder, data, { elementHeight, sortMode = 
   let { minStartDate, maxEndDate } = findDateBoundaries(data);
 
   // add some padding to axes
-  minStartDate -= 2 * 24 * 60 * 60 * 1000; // .subtract(2, 'days');
-  maxEndDate += 2 * 24 * 60 * 60 * 1000; // .add(2, 'days');
+  minStartDate -= 2 * 24 * 60 * 60 * 1000;
+  maxEndDate += 2 * 24 * 60 * 60 * 1000;
 
   createChartSVG(data, placeholder, { svgWidth, svgHeight, scaleWidth, elementHeight, scaleHeight, fontSize, minStartDate, maxEndDate, margin, showRelations });
 };
