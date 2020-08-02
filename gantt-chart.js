@@ -242,10 +242,9 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
       .attr('points', d => d.points);
   }
 
-  const grid = g1.append('g').call(xAxis);
+  const grid = g1.append('g');
 
   grid
-    .append('g')
     .selectAll('rect')
     .data(xScale.ticks())
     .enter()
@@ -255,6 +254,21 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
     .attr('height', svgHeight)
     .attr('width', (d, i) => svgWidth / xScale.ticks().length)
     .style('fill', (d, i) => i % 2 ? '#dedede30' : '#dedede00');
+
+  const nowOnScale = xScale(Date.now());
+
+  if (nowOnScale >= xScale.range()[0] && nowOnScale <= xScale.range()[1]) {
+    grid
+      .append('line')
+      .attr('x1', nowOnScale)
+      .attr('y1', 0)
+      .attr('x2', nowOnScale)
+      .attr('y2', svgHeight)
+      .style('stroke', 'rgb(232, 102, 102)')
+      .style('stroke-width', 3);
+  }
+
+  g1.append('g').call(xAxis);
 
   // append milestones only after we have rendered the connections to prevent lines overlapping the milestones
   const barsContainer = g1.append('g').attr('transform', `translate(0,${margin.top})`);
