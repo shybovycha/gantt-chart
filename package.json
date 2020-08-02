@@ -1,0 +1,21 @@
+{
+  "name": "gantt-chart-d3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [
+    "gantt",
+    "chart",
+    "d3"
+  ],
+  "author": "Artem Shubovych <shybovycha@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4"
+  },
+  "dependencies": {
+    "d3": "^5.16.0",
+    "moment": "^2.27.0"
+  }
+}
