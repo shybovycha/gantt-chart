@@ -201,6 +201,17 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
   // create container element for the whole chart
   const svg = select(placeholder).append('svg').attr('width', svgWidth).attr('height', svgHeight);
 
+  // error style
+  svg.append('pattern')
+    .attr('id', 'error-fill')
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr('width', '4')
+    .attr('height', '4')
+    .append('path')
+    .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
+    .style('stroke', '#d33')
+    .style('stroke-width', '1');
+
   const xScale = scaleTime()
     .domain([minStartDate, maxEndDate])
     .range([0, scaleWidth]);
@@ -251,7 +262,7 @@ const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight,
     .attr('y', d => d.y)
     .attr('width', d => d.width)
     .attr('height', d => d.height)
-    .style('fill', d => d.errors.length > 0 ? '#d33' : '#ddd')
+    .style('fill', d => d.errors.length > 0 ? 'url(#error-fill)' : '#ddd')
     .style('stroke', 'black');
 
   bars
