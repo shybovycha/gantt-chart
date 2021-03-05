@@ -11,26 +11,40 @@ export const createGanttChart = (parentElt, milestones) => {
 
   const ctx = canvas.getContext("2d");
 
-  const DEFAULT_ROW_HEIGHT = 40;
-  const DEFAULT_WIDTH = 1800;
-  const DEFAULT_FONT_SIZE = 12;
-  const DEFAULT_ROW_PADDING = 10;
+  const SCALE_FACTOR = 2;
 
-  const SLIDER_WIDTH = 10;
-
-  const SCALE_FACTOR = 1;
+  const DEFAULT_ROW_HEIGHT = 40 * SCALE_FACTOR;
+  const DEFAULT_WIDTH = 1800 * SCALE_FACTOR;
+  const DEFAULT_FONT_SIZE = 12 * SCALE_FACTOR;
+  const DEFAULT_ROW_PADDING = 10 * SCALE_FACTOR;
+  const DEFAULT_RADIUS = 5 * SCALE_FACTOR;
+  const SLIDER_WIDTH = 10 * SCALE_FACTOR;
 
   const COLORS = {
     milestone: {
       bar: {
-        highlighted: "rgba(112, 162, 236, 0.8)",
-        dragging: "rgba(112, 162, 236, 0.6)",
-        draggingBorder: "rgba(74, 137, 232, 1)",
-        default: "rgba(112, 162, 236, 1)"
+        odd: {
+          highlighted: "rgba(112, 162, 236, 0.8)",
+          dragging: "rgba(112, 162, 236, 0.6)",
+          draggingBorder: "rgba(74, 137, 232, 1)",
+          default: "rgba(112, 162, 236, 1)"
+        },
+        even: {
+          highlighted: "rgba(93, 238, 166, 0.8)",
+          dragging: "rgba(93, 238, 166, 0.6)",
+          draggingBorder: "rgba(42, 187, 115, 0.2)",
+          default: "rgba(93, 238, 166, 1)"
+        }
       },
       slider: {
-        highlighted: "rgba(82, 98, 224, 1)",
-        dragging: "rgba(125, 137, 232, 1)"
+        odd: {
+          dragging: "rgba(87, 137, 211, 1)",
+          highlighted: "rgba(61, 111, 185, 1)"
+        },
+        even: {
+          dragging: "rgba(42, 187, 115, 1)",
+          highlighted: "rgba(17, 162, 90, 1)"
+        }
       }
     },
     scale: {
@@ -40,6 +54,25 @@ export const createGanttChart = (parentElt, milestones) => {
       },
       marker: {
         today: "rgba(238, 156, 93, 1)"
+      }
+    }
+  };
+
+  const FONTS = {
+    scale: {
+      column: {
+        title: {
+          color: "rgba(0, 0, 0, 1)",
+          size: 12 * SCALE_FACTOR,
+          font: "Arial"
+        }
+      }
+    },
+    milestone: {
+      label: {
+        color: "rgba(0, 0, 0, 1)",
+        size: 12 * SCALE_FACTOR,
+        font: "Arial"
       }
     }
   };
@@ -346,8 +379,8 @@ export const createGanttChart = (parentElt, milestones) => {
       // TODO make columns aligned to day/hour/minute
       ctx.fillRect(i * columnWidth, 0, columnWidth, canvasHeight);
 
-      ctx.fillStyle = "black";
-      ctx.font = `${fontSize}px Sans Serif`;
+      ctx.fillStyle = FONTS.scale.column.title.color; // "black";
+      ctx.font = `${FONTS.scale.column.title.size}px ${FONTS.scale.column.title.font}`; // `${fontSize}px Arial`;
 
       const columnDate = addMilliseconds(minStart, i * columnDuration);
 
@@ -357,7 +390,9 @@ export const createGanttChart = (parentElt, milestones) => {
     }
 
     // draw bars
-    for (let bar of bars) {
+    for (let i = 0; i < bars.length; i++) {
+      const bar = bars[i];
+
       const {
         x,
         y,
@@ -368,18 +403,29 @@ export const createGanttChart = (parentElt, milestones) => {
         leftSliderSelected,
         rightSliderSelected
       } = bar;
+
       // console.log("Drawing rect at ", x, y, width, height, title, start, end);
 
       if (!isMouseDragging || selectedBar !== bar) {
-        ctx.fillStyle = isSelected
-          ? COLORS.milestone.bar.highlighted
-          : COLORS.milestone.bar.default;
+        if (i % 2 === 0) {
+          ctx.fillStyle = isSelected
+            ? COLORS.milestone.bar.even.highlighted
+            : COLORS.milestone.bar.even.default;
+        } else {
+          ctx.fillStyle = isSelected
+            ? COLORS.milestone.bar.odd.highlighted
+            : COLORS.milestone.bar.odd.default;
+        }
 
         // ctx.fillRect(x, y, width, height);
-        roundRect(ctx, x, y, width, height, 5, true, false);
+        roundRect(ctx, x, y, width, height, DEFAULT_RADIUS, true, false);
 
         if (leftSliderSelected) {
-          ctx.fillStyle = COLORS.milestone.slider.highlighted; // "rgba(200, 100, 25, 1.0)";
+          if (i % 2 === 0) {
+            ctx.fillStyle = COLORS.milestone.slider.even.highlighted; // "rgba(200, 100, 25, 1.0)";
+          } else {
+            ctx.fillStyle = COLORS.milestone.slider.odd.highlighted; // "rgba(200, 100, 25, 1.0)";
+          }
 
           // ctx.fillRect(
           //   x - SLIDER_WIDTH / 2,
@@ -394,7 +440,7 @@ export const createGanttChart = (parentElt, milestones) => {
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
             height + (SLIDER_WIDTH / 5) * 2,
-            5,
+            DEFAULT_RADIUS,
             true,
             false
           );
@@ -409,7 +455,11 @@ export const createGanttChart = (parentElt, milestones) => {
         }
 
         if (rightSliderSelected) {
-          ctx.fillStyle = COLORS.milestone.slider.highlighted; // "rgba(200, 100, 25, 1.0)";
+          if (i % 2 === 0) {
+            ctx.fillStyle = COLORS.milestone.slider.even.highlighted; // "rgba(200, 100, 25, 1.0)";
+          } else {
+            ctx.fillStyle = COLORS.milestone.slider.odd.highlighted; // "rgba(200, 100, 25, 1.0)";
+          }
 
           // ctx.fillRect(
           //   x + width - SLIDER_WIDTH / 2,
@@ -424,7 +474,7 @@ export const createGanttChart = (parentElt, milestones) => {
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
             height + (SLIDER_WIDTH / 5) * 2,
-            5,
+            DEFAULT_RADIUS,
             true,
             false
           );
@@ -439,26 +489,39 @@ export const createGanttChart = (parentElt, milestones) => {
         }
 
         // TODO count for label' width
-        ctx.fillStyle = "black";
-        ctx.font = `${fontSize}px Sans Serif`;
+        ctx.fillStyle = FONTS.milestone.label.color; // "black";
+        ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
 
         // console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
 
         ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
       } else if (isMouseDragging && selectedBar === bar) {
-        ctx.strokeStyle = COLORS.milestone.bar.draggingBorder;
-        ctx.fillStyle = COLORS.milestone.bar.dragging; // "rgba(200, 10, 25, 0.8)";
+        if (i % 2 === 0) {
+          ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
+          ctx.fillStyle = COLORS.milestone.bar.even.dragging; // "rgba(200, 10, 25, 0.8)";
+        } else {
+          ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
+          ctx.fillStyle = COLORS.milestone.bar.odd.dragging; // "rgba(200, 10, 25, 0.8)";
+        }
 
         // ctx.fillRect(x, y, width, height);
         roundRect(ctx, x, y, width, height, 5, true, true);
 
         if (!selectedSlider) {
-          ctx.strokeStyle = COLORS.milestone.bar.draggingBorder;
+          if (i % 2 === 0) {
+            ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
+          } else {
+            ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
+          }
 
           // ctx.strokeRect(x, y, width, height);
           roundRect(ctx, x, y, width, height, 5, true, true, 5, true, true);
         } else if (selectedSlider === "left") {
-          ctx.fillStyle = COLORS.milestone.slider.dragging; // "rgba(150, 50, 25, 1.0)";
+          if (i % 2 === 0) {
+            ctx.fillStyle = COLORS.milestone.slider.even.dragging; // "rgba(150, 50, 25, 1.0)";
+          } else {
+            ctx.fillStyle = COLORS.milestone.slider.odd.dragging; // "rgba(150, 50, 25, 1.0)";
+          }
 
           // ctx.fillRect(
           //   x - SLIDER_WIDTH / 2,
@@ -472,7 +535,7 @@ export const createGanttChart = (parentElt, milestones) => {
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
             height + (SLIDER_WIDTH / 5) * 2,
-            5,
+            DEFAULT_RADIUS,
             true,
             false
           );
@@ -485,7 +548,11 @@ export const createGanttChart = (parentElt, milestones) => {
           ctx.closePath();
           ctx.stroke();
         } else if (selectedSlider === "right") {
-          ctx.fillStyle = COLORS.milestone.slider.dragging; // "rgba(150, 50, 25, 0.8)";
+          if (i % 2 === 0) {
+            ctx.fillStyle = COLORS.milestone.slider.even.dragging; // "rgba(150, 50, 25, 0.8)";
+          } else {
+            ctx.fillStyle = COLORS.milestone.slider.odd.dragging; // "rgba(150, 50, 25, 0.8)";
+          }
 
           // ctx.fillRect(
           //   x + width - SLIDER_WIDTH / 2,
@@ -500,7 +567,7 @@ export const createGanttChart = (parentElt, milestones) => {
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
             height + (SLIDER_WIDTH / 5) * 2,
-            5,
+            DEFAULT_RADIUS,
             true,
             false
           );
