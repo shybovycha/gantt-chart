@@ -38,7 +38,8 @@ const COLORS = {
       even: {
         dragging: "rgba(42, 187, 115, 1)",
         highlighted: "rgba(17, 162, 90, 1)"
-      }
+      },
+      symbol: "rgba(0, 0, 0, 1.0)"
     }
   },
   scale: {
@@ -390,7 +391,7 @@ class GanttChart {
     );
 
     this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+    this.ctx.strokeStyle = COLORS.milestone.slider.symbol;
     this.ctx.beginPath();
     this.ctx.moveTo(x, y + SLIDER_WIDTH);
     this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
