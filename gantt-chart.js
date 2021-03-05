@@ -71,6 +71,9 @@ const FONTS = {
   }
 };
 
+const RIGHT_SLIDER = Symbol("right");
+const LEFT_SLIDER = Symbol("left");
+
 const roundRect = (ctx, x, y, width, height, radius, fill, stroke) => {
   if (typeof stroke === "undefined") {
     stroke = false;
@@ -293,7 +296,7 @@ class GanttChart {
         ) {
           bar.leftSliderSelected = true;
           this.selectedBar = bar;
-          this.selectedSlider = "left";
+          this.selectedSlider = LEFT_SLIDER;
         } else if (
           mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
           mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
@@ -302,7 +305,7 @@ class GanttChart {
         ) {
           bar.rightSliderSelected = true;
           this.selectedBar = bar;
-          this.selectedSlider = "right";
+          this.selectedSlider = RIGHT_SLIDER;
         } else if (this.selectedBar === bar) {
           this.selectedSlider = null;
         }
@@ -322,10 +325,10 @@ class GanttChart {
       if (!this.selectedSlider) {
         // for now only allow horizontal drags
         this.selectedBar.x += mouseX - this.initialMousePosition.x;
-      } else if (this.selectedSlider === "left") {
+      } else if (this.selectedSlider === LEFT_SLIDER) {
         this.selectedBar.x += mouseX - this.initialMousePosition.x;
         this.selectedBar.width -= mouseX - this.initialMousePosition.x;
-      } else if (this.selectedSlider === "right") {
+      } else if (this.selectedSlider === RIGHT_SLIDER) {
         this.selectedBar.width += mouseX - this.initialMousePosition.x;
       }
 
@@ -452,9 +455,9 @@ class GanttChart {
 
       if (!this.selectedSlider) {
         this.drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging: true });
-      } else if (this.selectedSlider === "left") {
+      } else if (this.selectedSlider === LEFT_SLIDER) {
         this.drawSlider({ x, y, height, isEven, isDragging: true });
-      } else if (this.selectedSlider === "right") {
+      } else if (this.selectedSlider === RIGHT_SLIDER) {
         this.drawSlider({ x: x + width, y, height, isEven, isDragging: true });
       }
     }
