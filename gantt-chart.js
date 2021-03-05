@@ -14,7 +14,7 @@ export const createGanttChart = (parentElt, milestones) => {
   const SCALE_FACTOR = 2;
 
   const DEFAULT_ROW_HEIGHT = 40 * SCALE_FACTOR;
-  const DEFAULT_WIDTH = 1800 * SCALE_FACTOR;
+  const DEFAULT_WIDTH = 1200 * SCALE_FACTOR;
   const DEFAULT_FONT_SIZE = 12 * SCALE_FACTOR;
   const DEFAULT_ROW_PADDING = 10 * SCALE_FACTOR;
   const DEFAULT_RADIUS = 5 * SCALE_FACTOR;
@@ -99,17 +99,18 @@ export const createGanttChart = (parentElt, milestones) => {
 
   const overallDuration = maxEnd.getTime() - minStart.getTime();
 
-  const shortestMilestoneDuration = milestones
-    .map(({ start, end }) => end.getTime() - start.getTime())
-    .reduce(
-      (acc, duration) => (acc < duration ? acc : duration),
-      Number.MAX_VALUE
-    );
+  // const shortestMilestoneDuration = milestones
+  //   .map(({ start, end }) => end.getTime() - start.getTime())
+  //   .reduce(
+  //     (acc, duration) => (acc < duration ? acc : duration),
+  //     Number.MAX_VALUE
+  //   );
 
   // shortest milestone should occupy 3 "columns"
   // hence the overall number of "columns" is overallDuration / (shortest / 3)
 
-  const columnDuration = Math.ceil(shortestMilestoneDuration / 3);
+  // const columnDuration = Math.ceil(shortestMilestoneDuration / 3);
+  const columnDuration = 24 * 60 * 60 * 1000;
 
   const overallColumns = Math.ceil(overallDuration / columnDuration);
 
@@ -384,7 +385,7 @@ export const createGanttChart = (parentElt, milestones) => {
 
       const columnDate = addMilliseconds(minStart, i * columnDuration);
 
-      const columnLabel = formatDate(columnDate, "dd/MM/yy hh:mm");
+      const columnLabel = formatDate(columnDate, "dd/MM/yy");
 
       const labelWidth = ctx.measureText(columnLabel).width;
 
