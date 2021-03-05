@@ -1,343 +1,157 @@
-import { axisBottom } from 'd3-axis';
-import { scaleTime } from 'd3-scale';
-import { select } from 'd3-selection';
+import {
+  addMilliseconds,
+  format as formatDate,
+  min as minDate,
+  max as maxDate,
+} from "date-fns";
 
-const prepareDataElement = ({ id, label, startDate, endDate, duration, dependsOn }) => {
-  if ((!startDate || !endDate) && !duration) {
-    throw new Error('Wrong element format: should contain either startDate and duration, or endDate and duration or startDate and endDate');
-  }
+export const createGanttChart = (parentElt, milestones) => {
+  const canvas = document.createElement("canvas");
+  parentElt.appendChild(canvas);
 
-  startDate = startDate && startDate.getTime();
-  endDate = endDate && endDate.getTime();
+  const ctx = canvas.getContext("2d");
 
-  if (startDate && !endDate && duration) {
-    endDate = startDate + duration;
-  }
+  const DEFAULT_ROW_HEIGHT = 40;
+  const DEFAULT_WIDTH = 1800;
+  const DEFAULT_FONT_SIZE = 12;
+  const DEFAULT_ROW_PADDING = 10;
 
-  if (!startDate && endDate && duration) {
-    startDate = endDate - duration;
-  }
+  const fontSize = DEFAULT_FONT_SIZE;
 
-  if (!dependsOn)
-    dependsOn = [];
+  const canvasWidth = canvas.outerWidth || DEFAULT_WIDTH;
+  const canvasHeight =
+    canvas.outerHeight ||
+    (milestones.length + 1) * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2);
 
-  return {
-    id,
-    label,
-    startDate,
-    endDate,
-    duration,
-    dependsOn
-  };
-};
+  // this makes a 2x image, which looks better on hi-res displays (like Retina and 4K)
+  canvas.style.width = `${canvasWidth / 2}px`;
+  canvas.style.height = `${canvasHeight / 2}px`;
 
-const findDateBoundaries = data => {
-  let minStartDate, maxEndDate;
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
 
-  data.forEach(({ startDate, endDate }) => {
-    if (!minStartDate || startDate < minStartDate) minStartDate = startDate;
+  console.log("canvas", canvasWidth, canvasHeight);
 
-    if (!minStartDate || endDate < minStartDate) minStartDate = endDate;
+  // create header / scale
+  // find the shortest and the longest milestones
+  const minStart = minDate(milestones.map(({ start }) => start));
+  const maxEnd = maxDate(milestones.map(({ end }) => end));
 
-    if (!maxEndDate || endDate > maxEndDate) maxEndDate = endDate;
+  const overallDuration = maxEnd.getTime() - minStart.getTime();
 
-    if (!maxEndDate || startDate > maxEndDate) maxEndDate = startDate;
-  });
+  const shortestMilestoneDuration = milestones
+    .map(({ start, end }) => end.getTime() - start.getTime())
+    .reduce(
+      (acc, duration) => (acc < duration ? acc : duration),
+      Number.MAX_VALUE
+    );
 
-  return {
-    minStartDate,
-    maxEndDate
-  };
-};
+  // shortest milestone should occupy 3 "columns"
+  // hence the overall number of "columns" is overallDuration / (shortest / 3)
 
-const createDataCacheById = data => data.reduce((cache, elt) => ({ ...cache, [elt.id]: elt }), {});
+  const columnDuration = Math.ceil(shortestMilestoneDuration / 3);
 
-const createChildrenCache = data => {
-  const dataCache = createDataCacheById(data);
+  const overallColumns = Math.ceil(overallDuration / columnDuration);
 
-  const fillDependenciesForElement = (eltId, dependenciesByParent) => {
-    dataCache[eltId].dependsOn.forEach(parentId => {
-      if (!dependenciesByParent[parentId])
-        dependenciesByParent[parentId] = [];
+  const columnWidth = Math.ceil(canvasWidth / overallColumns);
 
-      if (dependenciesByParent[parentId].indexOf(eltId) < 0)
-        dependenciesByParent[parentId].push(eltId);
-
-      fillDependenciesForElement(parentId, dependenciesByParent);
-    });
-  };
-
-  return data.reduce((cache, elt) => {
-    if (!cache[elt.id])
-      cache[elt.id] = [];
-
-    fillDependenciesForElement(elt.id, cache);
-
-    return cache;
-  }, {});
-}
-
-const sortElementsByChildrenCount = data => {
-  const childrenByParentId = createChildrenCache(data);
-
-  return data.sort((e1, e2) => {
-    if (childrenByParentId[e1.id] && childrenByParentId[e2.id] && childrenByParentId[e1.id].length > childrenByParentId[e2.id].length)
-      return -1;
-    else
-      return 1;
-  });
-};
-
-const sortElementsByEndDate = data =>
-  data.sort((e1, e2) => {
-    if (e1.endDate < e2.endDate)
-      return -1;
-    else
-      return 1;
-  });
-
-const sortElements = (data, sortMode) => {
-  if (sortMode === 'childrenCount') {
-    return sortElementsByChildrenCount(data);
-  } else if (sortMode === 'date') {
-    return sortElementsByEndDate(data);
-  }
-}
-
-const parseUserData = data => data.map(prepareDataElement);
-
-const createPolylineData = (rectangleData, elementHeight) => {
-  // prepare dependencies polyline data
-  const cachedData = createDataCacheById(rectangleData);
-
-  // used to calculate offsets between elements later
-  const storedConnections = rectangleData.reduce((acc, e) => ({ ...acc, [e.id]: 0 }), {});
-
-  // create data describing connections' lines
-  return rectangleData.flatMap(d =>
-    d.dependsOn
-      .map(parentId => cachedData[parentId])
-      .map(parent => {
-        const color = '#' + (Math.max(0.1, Math.min(0.9, Math.random())) * 0xFFF << 0).toString(16);
-
-        // increase the amount rows occupied by both parent and current element (d)
-        storedConnections[parent.id]++;
-        storedConnections[d.id]++;
-
-        const deltaParentConnections = storedConnections[parent.id] * (elementHeight / 4);
-        const deltaChildConnections = storedConnections[d.id] * (elementHeight / 4);
-
-        const points = [
-          d.x, (d.y + (elementHeight / 2)),
-          d.x - deltaChildConnections, (d.y + (elementHeight / 2)),
-          d.x - deltaChildConnections, (d.y - (elementHeight * 0.25)),
-          parent.xEnd + deltaParentConnections, (d.y - (elementHeight * 0.25)),
-          parent.xEnd + deltaParentConnections, (parent.y + (elementHeight / 2)),
-          parent.xEnd, (parent.y + (elementHeight / 2))
-        ];
-
-        let strokeDash = '0';
-        let stroke = color;
-
-        if (d.errors.length > 0) {
-          strokeDash = '3';
-          stroke = '#d33';
-        }
-
-        return {
-          points: points.join(','),
-          stroke,
-          strokeDash
-        };
-      })
-  );
-};
-
-const createElementData = (data, elementHeight, xScale, fontSize) =>
-  data.map((d, i) => {
-    const x = xScale(d.startDate);
-    const xEnd = xScale(d.endDate);
-    const y = i * elementHeight * 1.5;
-    const width = xEnd - x;
-    const height = elementHeight;
-
-    const charWidth = (width / fontSize);
-    const dependsOn = d.dependsOn;
-    const id = d.id;
-
-    const tooltip = d.label;
-
-    const singleCharWidth = fontSize * 0.5;
-    const singleCharHeight = fontSize * 0.45;
-
-    let label = d.label;
-
-    if (label.length > charWidth) {
-      label = label.split('').slice(0, charWidth - 3).join('') + '...';
+  // draw columns
+  for (let i = 0; i < overallColumns; i++) {
+    if (i % 2 === 0) {
+      ctx.fillStyle = "rgba(220, 225, 220, 0.4)";
+    } else {
+      ctx.fillStyle = "white";
     }
 
-    const labelX = x + ((width / 2) - ((label.length / 2) * singleCharWidth));
-    const labelY = y + ((height / 2) + (singleCharHeight));
+    // TODO make columns aligned to day/hour/minute
+    ctx.fillRect(i * columnWidth, 0, columnWidth, canvasHeight);
 
-    const errors = d.errors;
+    ctx.fillStyle = "black";
+    ctx.font = `${fontSize}px Sans Serif`;
 
-    return {
-      x,
-      y,
-      xEnd,
-      width,
-      height,
-      id,
-      dependsOn,
-      label,
-      labelX,
-      labelY,
-      tooltip,
-      errors
-    };
-  });
+    const columnDate = addMilliseconds(minStart, i * columnDuration);
 
-const createChartSVG = (data, placeholder, { svgWidth, svgHeight, elementHeight, scaleWidth, fontSize, minStartDate, maxEndDate, margin, showRelations }) => {
-  // create container element for the whole chart
-  const svg = select(placeholder).append('svg').attr('width', svgWidth).attr('height', svgHeight);
+    const columnLabel = formatDate(columnDate, "dd/MM/yy hh:mm");
 
-  // error style
-  svg.append('pattern')
-    .attr('id', 'error-fill')
-    .attr('patternUnits', 'userSpaceOnUse')
-    .attr('width', '4')
-    .attr('height', '4')
-    .append('path')
-    .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
-    .style('stroke', '#d33')
-    .style('stroke-width', '1');
-
-  const xScale = scaleTime()
-    .domain([minStartDate, maxEndDate])
-    .range([0, scaleWidth]);
-
-  // prepare data for every data element
-  const rectangleData = createElementData(data, elementHeight, xScale, fontSize);
-
-  const xAxis = axisBottom(xScale);
-
-  // create container for the data
-  const g1 = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-
-  // add milestone relationship lines to the SVG
-  if (showRelations) {
-    // create data describing connections' lines
-    const polylineData = createPolylineData(rectangleData, elementHeight);
-
-    const linesContainer = g1.append('g').attr('transform', `translate(0,${margin.top})`);
-
-    linesContainer
-      .selectAll('polyline')
-      .data(polylineData)
-      .enter()
-      .append('polyline')
-      .style('fill', 'none')
-      .style('stroke', d => d.stroke)
-      .style('stroke-dasharray', d => d.strokeDash)
-      .attr('points', d => d.points);
+    ctx.fillText(columnLabel, i * columnWidth, fontSize);
   }
 
-  const grid = g1.append('g');
+  // console.log(
+  //   "Columns:",
+  //   overallColumns,
+  //   "of",
+  //   columnWidth,
+  //   "px",
+  //   columnDuration,
+  //   "ms"
+  // );
 
-  grid
-    .selectAll('rect')
-    .data(xScale.ticks())
-    .enter()
-    .append('rect')
-    .attr('x', (d, i) => xScale(d))
-    .attr('y', 0)
-    .attr('height', svgHeight)
-    .attr('width', (d, i) => svgWidth / xScale.ticks().length)
-    .style('fill', (d, i) => i % 2 ? '#dedede30' : '#dedede00');
+  /*
+   * linear interpolation of a point (x, y) between two known points (x0, y0) and (x1, y1):
+   *
+   * y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
+   *
+   * in our case, x0 would be the minStart and x1 would be the maxEnd
+   * whilst y0 would be 0 and y1 would be canvasWidth
+   *
+   * and for any given point `date` (x) we are looking for corresponding x coordinate on canvas (y)
+   *
+   * so the equation is
+   *
+   * result = 0 + (date - minStart) * ((canvasWidth - 0) / (maxEnd - minStart))
+   *
+   * and since we know the (maxEnd - minStart) as overallDuration,
+   *
+   * result = (date - minStart) * (canvasWidth / overallDuration)
+   */
+  const scaleX = (date) =>
+    Math.ceil((date.getTime() - minStart) * (canvasWidth / overallDuration));
 
-  const nowOnScale = xScale(Date.now());
+  console.log(
+    "scaled start",
+    minStart,
+    scaleX(minStart),
+    "scaled end",
+    maxEnd,
+    scaleX(maxEnd)
+  );
 
-  if (nowOnScale >= xScale.range()[0] && nowOnScale <= xScale.range()[1]) {
-    grid
-      .append('line')
-      .attr('x1', nowOnScale)
-      .attr('y1', 0)
-      .attr('x2', nowOnScale)
-      .attr('y2', svgHeight)
-      .style('stroke', 'rgb(232, 102, 102)')
-      .style('stroke-width', 3);
+  let currentRow = 0;
+
+  for (let { title, start, end } of milestones) {
+    const x = scaleX(start);
+    const y =
+      fontSize +
+      currentRow++ * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2) +
+      DEFAULT_ROW_PADDING;
+
+    const width = scaleX(end) - x;
+    const height = DEFAULT_ROW_HEIGHT;
+
+    // console.log("Drawing rect at ", x, y, width, height, title, start, end);
+
+    ctx.fillStyle = "rgba(220, 220, 220, 0.8)";
+    ctx.fillRect(x, y, width, height);
+
+    // TODO count for label' width
+    ctx.fillStyle = "black";
+    ctx.font = `${fontSize}px Sans Serif`;
+
+    console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
+
+    ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
   }
 
-  g1.append('g').call(xAxis);
+  // draw today's marker line
+  {
+    const x = scaleX(new Date());
 
-  // append milestones only after we have rendered the connections to prevent lines overlapping the milestones
-  const barsContainer = g1.append('g').attr('transform', `translate(0,${margin.top})`);
+    console.log("today", x);
 
-  // create axes
-  const bars = barsContainer
-    .selectAll('g')
-    .data(rectangleData)
-    .enter()
-    .append('g');
-
-  bars
-    .append('rect')
-    .attr('rx', elementHeight / 2)
-    .attr('ry', elementHeight / 2)
-    .attr('x', d => d.x)
-    .attr('y', d => d.y)
-    .attr('width', d => d.width)
-    .attr('height', d => d.height)
-    .style('fill', d => d.errors.length > 0 ? 'url(#error-fill)' : '#ddd')
-    .style('stroke', 'black');
-
-  bars
-    .append('text')
-    .style('fill', 'black')
-    .style('font-family', 'sans-serif')
-    .attr('x', d => d.labelX)
-    .attr('y', d => d.labelY)
-    .text(d => d.label);
-
-  bars
-    .append('title')
-    .text(d => d.tooltip);
-};
-
-const detectConflicts = data => {
-  const dataCache = createDataCacheById(data);
-
-  return data.map(milestone => {
-    const errorousDependencies = milestone.dependsOn.filter(dependencyId => dataCache[dependencyId].startDate >= milestone.startDate);
-    milestone.errors = (milestone.errors || []).concat(errorousDependencies.map(errorId => `Dependency ${errorId} must end before this milestone`));
-    return milestone;
-  });
-};
-
-export const createGanttChart = (placeholder, data, { elementHeight, sortMode = 'date', showRelations = true, svgOptions }) => {
-  // prepare data
-  const margin = (svgOptions && svgOptions.margin) || {
-    top: elementHeight * 2,
-    left: elementHeight * 2
-  };
-
-  const scaleWidth = ((svgOptions && svgOptions.width) || 600) - (margin.left * 2);
-  const scaleHeight = Math.max((svgOptions && svgOptions.height) || 200, data.length * elementHeight * 2) - (margin.top * 2);
-
-  const svgWidth = scaleWidth + (margin.left * 2);
-  const svgHeight = scaleHeight + (margin.top * 2);
-
-  const fontSize = (svgOptions && svgOptions.fontSize) || 12;
-
-  data = parseUserData(data); // transform raw user data to valid values
-  data = sortElements(data, sortMode);
-  data = detectConflicts(data);
-
-  let { minStartDate, maxEndDate } = findDateBoundaries(data);
-
-  // add some padding to axes
-  minStartDate -= 2 * 24 * 60 * 60 * 1000;
-  maxEndDate += 2 * 24 * 60 * 60 * 1000;
-
-  createChartSVG(data, placeholder, { svgWidth, svgHeight, scaleWidth, elementHeight, scaleHeight, fontSize, minStartDate, maxEndDate, margin, showRelations });
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.moveTo(x, fontSize);
+    ctx.lineTo(x, canvasHeight);
+    ctx.stroke();
+  }
 };

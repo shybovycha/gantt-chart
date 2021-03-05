@@ -1,53 +1,42 @@
+import {
+  startOfDay,
+  add as addDuration
+} from "date-fns";
+
 import { createGanttChart } from './gantt-chart';
 
 const data = [
   {
-    startDate: new Date('2020-07-27T00:00:00'),
-    endDate: new Date('2020-08-04T00:00:00'),
-    label: 'milestone 01',
-    id: 'm01',
-    dependsOn: [],
+    id: "m1",
+    title: "milestone 1",
+    start: addDuration(startOfDay(new Date()), { days: 1 }),
+    end: addDuration(startOfDay(new Date()), { days: 2 }),
+    dependencies: []
   },
+
   {
-    startDate: new Date('2020-07-23T00:00:00'),
-    endDate: new Date('2020-08-01T00:00:00'),
-    label: 'milestone 06',
-    id: 'm06',
-    dependsOn: ['m01'],
+    id: "m2",
+    title: "milestone 2",
+    start: addDuration(startOfDay(new Date()), { days: -1 }),
+    end: addDuration(startOfDay(new Date()), { days: 1 }),
+    dependencies: []
   },
+
   {
-    duration: 7 * 24 * 60 * 60 * 1000, // 7 days
-    endDate: new Date('2020-07-24T00:00:00'),
-    label: 'milestone 02',
-    id: 'm02',
-    dependsOn: ['m04'],
+    id: "m3",
+    title: "milestone 3",
+    start: addDuration(startOfDay(new Date()), { days: 4 }),
+    end: addDuration(startOfDay(new Date()), { days: 5 }),
+    dependencies: []
   },
+
   {
-    startDate: new Date('2020-07-27T00:00:00'),
-    duration: 12 * 24 * 60 * 60 * 1000, // 12 days
-    label: 'milestone 03',
-    id: 'm03',
-    dependsOn: ['m01'],
-  },
-  {
-    endDate: new Date('2020-08-17T00:00:00'),
-    duration: 5 * 24 * 60 * 60 * 1000, // 5 days
-    label: 'milestone 04',
-    id: 'm04',
-    dependsOn: ['m01'],
+    id: "m4",
+    title: "milestone 4",
+    start: addDuration(startOfDay(new Date()), { days: 3 }),
+    end: addDuration(startOfDay(new Date()), { days: 6 }),
+    dependencies: []
   },
 ];
 
-createGanttChart(
-  document.querySelector('#chart'),
-  data,
-  {
-    elementHeight: 20,
-    sortMode: 'date', // alternatively, 'childrenCount'
-    svgOptions: {
-      width: 1200,
-      height: 400,
-      fontSize: 12
-    }
-  }
-);
+createGanttChart(document.querySelector('#chart'), data);
