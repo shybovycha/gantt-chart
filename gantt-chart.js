@@ -386,7 +386,9 @@ export const createGanttChart = (parentElt, milestones) => {
 
       const columnLabel = formatDate(columnDate, "dd/MM/yy hh:mm");
 
-      ctx.fillText(columnLabel, i * columnWidth, fontSize);
+      const labelWidth = ctx.measureText(columnLabel).width;
+
+      ctx.fillText(columnLabel, (i * columnWidth) + ((columnWidth - labelWidth) / 2), fontSize);
     }
 
     // draw bars
@@ -494,7 +496,8 @@ export const createGanttChart = (parentElt, milestones) => {
 
         // console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
 
-        ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
+        const labelWidth = ctx.measureText(title).width;
+        ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + fontSize / 2 + height / 2);
       } else if (isMouseDragging && selectedBar === bar) {
         if (i % 2 === 0) {
           ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
