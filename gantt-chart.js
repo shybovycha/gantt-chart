@@ -360,6 +360,73 @@ class GanttChart {
     this.ctx.fillText(columnLabel, (index * this.columnWidth) + ((this.columnWidth - labelWidth) / 2), DEFAULT_FONT_SIZE);
   }
 
+  drawSlider({ x, y, height, isEven, isDragging }) {
+    if (isDragging) {
+      if (isEven) {
+        this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
+      } else {
+        this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
+      }
+    } else {
+      if (isEven) {
+        this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
+      } else {
+        this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
+      }
+    }
+
+    roundRect(
+      this.ctx,
+      x - SLIDER_WIDTH / 2,
+      y - SLIDER_WIDTH / 5,
+      SLIDER_WIDTH,
+      height + (SLIDER_WIDTH / 5) * 2,
+      DEFAULT_RADIUS,
+      true,
+      false
+    );
+
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y + SLIDER_WIDTH);
+    this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
+    this.ctx.closePath();
+    this.ctx.stroke();
+  }
+
+  drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging }) {
+    if (isDragging) {
+      this.ctx.fillStyle = isEven
+        ? COLORS.milestone.bar.even.dragging
+        : COLORS.milestone.bar.odd.dragging;
+
+      this.ctx.strokeStyle = isEven
+        ? COLORS.milestone.bar.even.draggingBorder
+        : COLORS.milestone.bar.odd.draggingBorder;
+    } else {
+      if (isEven) {
+        this.ctx.fillStyle = isSelected
+          ? COLORS.milestone.bar.even.highlighted
+          : COLORS.milestone.bar.even.default;
+      } else {
+        this.ctx.fillStyle = isSelected
+          ? COLORS.milestone.bar.odd.highlighted
+          : COLORS.milestone.bar.odd.default;
+      }
+
+      this.ctx.strokeStyle = '';
+    }
+
+    roundRect(this.ctx, x, y, width, height, DEFAULT_RADIUS, true, isDragging);
+
+    this.ctx.fillStyle = FONTS.milestone.label.color;
+    this.ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
+
+    const labelWidth = this.ctx.measureText(title).width;
+    this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
+  }
+
   drawMilestone(bar, isEven) {
     const {
       x,
@@ -373,146 +440,22 @@ class GanttChart {
     } = bar;
 
     if (!this.isMouseDragging || this.selectedBar !== bar) {
-      if (isEven) {
-        this.ctx.fillStyle = isSelected
-          ? COLORS.milestone.bar.even.highlighted
-          : COLORS.milestone.bar.even.default;
-      } else {
-        this.ctx.fillStyle = isSelected
-          ? COLORS.milestone.bar.odd.highlighted
-          : COLORS.milestone.bar.odd.default;
-      }
-
-      roundRect(this.ctx, x, y, width, height, DEFAULT_RADIUS, true, false);
+      this.drawMilestoneBar({ x, y, width, height, title, isSelected: isSelected || leftSliderSelected || rightSliderSelected, isEven, isDragging: false });
 
       if (leftSliderSelected) {
-        if (isEven) {
-          this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
-        } else {
-          this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
-        }
-
-        roundRect(
-          this.ctx,
-          x - SLIDER_WIDTH / 2,
-          y - SLIDER_WIDTH / 5,
-          SLIDER_WIDTH,
-          height + (SLIDER_WIDTH / 5) * 2,
-          DEFAULT_RADIUS,
-          true,
-          false
-        );
-
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y + SLIDER_WIDTH);
-        this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
-        this.ctx.closePath();
-        this.ctx.stroke();
+        this.drawSlider({ x, y, height, isEven, isDragging: false });
+      } else if (rightSliderSelected) {
+        this.drawSlider({ x: x + width, y, height, isEven, isDragging: false });
       }
-
-      if (rightSliderSelected) {
-        if (isEven) {
-          this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
-        } else {
-          this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
-        }
-
-        roundRect(
-          this.ctx,
-          x + width - SLIDER_WIDTH / 2,
-          y - SLIDER_WIDTH / 5,
-          SLIDER_WIDTH,
-          height + (SLIDER_WIDTH / 5) * 2,
-          DEFAULT_RADIUS,
-          true,
-          false
-        );
-
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-        this.ctx.beginPath();
-        this.ctx.moveTo(x + width, y + SLIDER_WIDTH);
-        this.ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
-        this.ctx.closePath();
-        this.ctx.stroke();
-      }
-
-      this.ctx.fillStyle = FONTS.milestone.label.color;
-      this.ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
-
-      const labelWidth = this.ctx.measureText(title).width;
-      this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
     } else if (this.isMouseDragging && this.selectedBar === bar) {
-      if (isEven) {
-        this.ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
-        this.ctx.fillStyle = COLORS.milestone.bar.even.dragging;
-      } else {
-        this.ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
-        this.ctx.fillStyle = COLORS.milestone.bar.odd.dragging;
-      }
-
-      roundRect(this.ctx, x, y, width, height, 5, true, true);
+      this.drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging: true });
 
       if (!this.selectedSlider) {
-        if (isEven) {
-          this.ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
-        } else {
-          this.ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
-        }
-
-        roundRect(this.ctx, x, y, width, height, 5, true, true, 5, true, true);
+        this.drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging: true });
       } else if (this.selectedSlider === "left") {
-        if (isEven) {
-          this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
-        } else {
-          this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
-        }
-
-        roundRect(
-          this.ctx,
-          x - SLIDER_WIDTH / 2,
-          y - SLIDER_WIDTH / 5,
-          SLIDER_WIDTH,
-          height + (SLIDER_WIDTH / 5) * 2,
-          DEFAULT_RADIUS,
-          true,
-          false
-        );
-
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y + SLIDER_WIDTH);
-        this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
-        this.ctx.closePath();
-        this.ctx.stroke();
+        this.drawSlider({ x, y, height, isEven, isDragging: true });
       } else if (this.selectedSlider === "right") {
-        if (isEven) {
-          this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
-        } else {
-          this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
-        }
-
-        roundRect(
-          this.ctx,
-          x + width - SLIDER_WIDTH / 2,
-          y - SLIDER_WIDTH / 5,
-          SLIDER_WIDTH,
-          height + (SLIDER_WIDTH / 5) * 2,
-          DEFAULT_RADIUS,
-          true,
-          false
-        );
-
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-        this.ctx.beginPath();
-        this.ctx.moveTo(x + width, y + SLIDER_WIDTH);
-        this.ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
-        this.ctx.closePath();
-        this.ctx.stroke();
+        this.drawSlider({ x: x + width, y, height, isEven, isDragging: true });
       }
     }
   }
