@@ -3,7 +3,7 @@ import {
   add as addDuration
 } from "date-fns";
 
-import { createGanttChart } from './gantt-chart';
+import { GanttChart } from './gantt-chart';
 
 const data = [
   {
@@ -39,4 +39,9 @@ const data = [
   },
 ];
 
-createGanttChart(document.querySelector('#chart'), data);
+const chart = new GanttChart(document.querySelector('#chart'), data);
+
+chart.addEventListener('milestonemove', (e) => console.log('Milestone moved', e.detail));
+chart.addEventListener('milestoneresize', (e) => console.log('Milestone resized', e.detail));
+
+chart.render();

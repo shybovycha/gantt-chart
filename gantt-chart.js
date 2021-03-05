@@ -75,6 +75,11 @@ const FONTS = {
 const RIGHT_SLIDER = Symbol("right");
 const LEFT_SLIDER = Symbol("left");
 
+const EVENT_TYPE = {
+  MILESTONE_MOVED: 'milestonemove',
+  MILESTONE_RESIZED: 'milestoneresize',
+};
+
 const roundRect = (ctx, x, y, width, height, radius, fill, stroke) => {
   if (typeof stroke === "undefined") {
     stroke = false;
@@ -136,8 +141,10 @@ const roundRect = (ctx, x, y, width, height, radius, fill, stroke) => {
   }
 };
 
-class GanttChart {
+export class GanttChart extends EventTarget {
   constructor(parentElt, milestones) {
+    super();
+
     this.milestones = milestones;
 
     this.initializeCanvas(parentElt);
@@ -192,7 +199,7 @@ class GanttChart {
 
     let currentRow = 0;
 
-    for (let { title, start, end } of this.milestones) {
+    for (let { title, start, end, id } of this.milestones) {
       const x = this.scaleX(start);
       const y =
         DEFAULT_FONT_SIZE +
@@ -202,7 +209,7 @@ class GanttChart {
       const width = this.scaleX(end) - x;
       const height = DEFAULT_ROW_HEIGHT;
 
-      const bar = { x, y, width, height, title };
+      const bar = { x, y, width, height, id, title };
       this.bars.push(bar);
     }
   }
@@ -212,6 +219,16 @@ class GanttChart {
     this.selectedSlider = null;
     this.isMouseDragging = false;
     this.initialMousePosition = { x: 0, y: 0 };
+    this.initialBar = null;
+  }
+
+  barToEventDetail({ x, width, title, id }) {
+    return {
+      start: this.scaleDate(x),
+      end: this.scaleDate(x + width),
+      title,
+      id
+    };
   }
 
   addEventHandlers() {
@@ -234,6 +251,7 @@ class GanttChart {
 
     if (this.selectedBar) {
       this.isMouseDragging = true;
+      this.initialBar = { ...this.selectedBar };
     }
   }
 
@@ -244,9 +262,19 @@ class GanttChart {
     };
 
     if (this.selectedBar) {
+      const from = this.barToEventDetail(this.initialBar);
+      const to = this.barToEventDetail(this.selectedBar);
+
+      if (this.selectedSlider) {
+        this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_RESIZED, { detail: { from, to } }));
+      } else {
+        this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_MOVED, { detail: { from, to } }));
+      }
+
       this.isMouseDragging = false;
       this.selectedBar = null;
       this.selectedSlider = null;
+      this.initialBar = null;
 
       this.render();
     }
@@ -511,6 +539,26 @@ class GanttChart {
    */
   scaleX(date) {
     return Math.ceil((date.getTime() - this.minStart) * (this.canvasWidth / this.overallDuration));
+  }
+
+  /**
+   * inverse to {@link scaleX} linear interpolation
+   *
+   * y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
+   *
+   * x0 = 0
+   * y0 = minStart
+   *
+   * x1 = canvasWidth
+   * y1 = maxEnd
+   *
+   * y = minStart + (x - 0) * ((maxEnd - minStart) / (canvasWidth - 0))
+   *
+   * y = minStart + (x * (overallDuration / canvasWidth))
+   *
+   */
+  scaleDate(x) {
+    return new Date(Math.ceil(this.minStart.getTime() + (x * (this.overallDuration / this.canvasWidth))));
   }
 }
 
