@@ -339,189 +339,197 @@ class GanttChart {
     }
   }
 
+  drawColumn(index) {
+    if (index % 2 === 0) {
+      this.ctx.fillStyle = COLORS.scale.bar.even;
+    } else {
+      this.ctx.fillStyle = COLORS.scale.bar.odd;
+    }
+
+    this.ctx.fillRect(index * this.columnWidth, 0, this.columnWidth, this.canvasHeight);
+
+    this.ctx.fillStyle = FONTS.scale.column.title.color;
+    this.ctx.font = `${FONTS.scale.column.title.size}px ${FONTS.scale.column.title.font}`;
+
+    const columnDate = addMilliseconds(this.minStart, index * this.columnDuration);
+
+    const columnLabel = formatDate(columnDate, "dd/MM/yy");
+
+    const labelWidth = this.ctx.measureText(columnLabel).width;
+
+    this.ctx.fillText(columnLabel, (index * this.columnWidth) + ((this.columnWidth - labelWidth) / 2), DEFAULT_FONT_SIZE);
+  }
+
+  drawMilestone(bar, isEven) {
+    const {
+      x,
+      y,
+      width,
+      height,
+      title,
+      isSelected,
+      leftSliderSelected,
+      rightSliderSelected
+    } = bar;
+
+    if (!this.isMouseDragging || this.selectedBar !== bar) {
+      if (isEven) {
+        this.ctx.fillStyle = isSelected
+          ? COLORS.milestone.bar.even.highlighted
+          : COLORS.milestone.bar.even.default;
+      } else {
+        this.ctx.fillStyle = isSelected
+          ? COLORS.milestone.bar.odd.highlighted
+          : COLORS.milestone.bar.odd.default;
+      }
+
+      roundRect(this.ctx, x, y, width, height, DEFAULT_RADIUS, true, false);
+
+      if (leftSliderSelected) {
+        if (isEven) {
+          this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
+        } else {
+          this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
+        }
+
+        roundRect(
+          this.ctx,
+          x - SLIDER_WIDTH / 2,
+          y - SLIDER_WIDTH / 5,
+          SLIDER_WIDTH,
+          height + (SLIDER_WIDTH / 5) * 2,
+          DEFAULT_RADIUS,
+          true,
+          false
+        );
+
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y + SLIDER_WIDTH);
+        this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
+        this.ctx.closePath();
+        this.ctx.stroke();
+      }
+
+      if (rightSliderSelected) {
+        if (isEven) {
+          this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
+        } else {
+          this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
+        }
+
+        roundRect(
+          this.ctx,
+          x + width - SLIDER_WIDTH / 2,
+          y - SLIDER_WIDTH / 5,
+          SLIDER_WIDTH,
+          height + (SLIDER_WIDTH / 5) * 2,
+          DEFAULT_RADIUS,
+          true,
+          false
+        );
+
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + width, y + SLIDER_WIDTH);
+        this.ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
+        this.ctx.closePath();
+        this.ctx.stroke();
+      }
+
+      this.ctx.fillStyle = FONTS.milestone.label.color;
+      this.ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
+
+      const labelWidth = this.ctx.measureText(title).width;
+      this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
+    } else if (this.isMouseDragging && this.selectedBar === bar) {
+      if (isEven) {
+        this.ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
+        this.ctx.fillStyle = COLORS.milestone.bar.even.dragging;
+      } else {
+        this.ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
+        this.ctx.fillStyle = COLORS.milestone.bar.odd.dragging;
+      }
+
+      roundRect(this.ctx, x, y, width, height, 5, true, true);
+
+      if (!this.selectedSlider) {
+        if (isEven) {
+          this.ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
+        } else {
+          this.ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
+        }
+
+        roundRect(this.ctx, x, y, width, height, 5, true, true, 5, true, true);
+      } else if (this.selectedSlider === "left") {
+        if (isEven) {
+          this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
+        } else {
+          this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
+        }
+
+        roundRect(
+          this.ctx,
+          x - SLIDER_WIDTH / 2,
+          y - SLIDER_WIDTH / 5,
+          SLIDER_WIDTH,
+          height + (SLIDER_WIDTH / 5) * 2,
+          DEFAULT_RADIUS,
+          true,
+          false
+        );
+
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y + SLIDER_WIDTH);
+        this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
+        this.ctx.closePath();
+        this.ctx.stroke();
+      } else if (this.selectedSlider === "right") {
+        if (isEven) {
+          this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
+        } else {
+          this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
+        }
+
+        roundRect(
+          this.ctx,
+          x + width - SLIDER_WIDTH / 2,
+          y - SLIDER_WIDTH / 5,
+          SLIDER_WIDTH,
+          height + (SLIDER_WIDTH / 5) * 2,
+          DEFAULT_RADIUS,
+          true,
+          false
+        );
+
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + width, y + SLIDER_WIDTH);
+        this.ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
+        this.ctx.closePath();
+        this.ctx.stroke();
+      }
+    }
+  }
+
   render() {
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
     // draw background columns
     for (let i = 0; i < this.overallColumns; i++) {
-      if (i % 2 === 0) {
-        this.ctx.fillStyle = COLORS.scale.bar.even;
-      } else {
-        this.ctx.fillStyle = COLORS.scale.bar.odd;
-      }
-
-      this.ctx.fillRect(i * this.columnWidth, 0, this.columnWidth, this.canvasHeight);
-
-      this.ctx.fillStyle = FONTS.scale.column.title.color;
-      this.ctx.font = `${FONTS.scale.column.title.size}px ${FONTS.scale.column.title.font}`;
-
-      const columnDate = addMilliseconds(this.minStart, i * this.columnDuration);
-
-      const columnLabel = formatDate(columnDate, "dd/MM/yy");
-
-      const labelWidth = this.ctx.measureText(columnLabel).width;
-
-      this.ctx.fillText(columnLabel, (i * this.columnWidth) + ((this.columnWidth - labelWidth) / 2), DEFAULT_FONT_SIZE);
+      this.drawColumn(i);
     }
 
     // draw bars
     for (let i = 0; i < this.bars.length; i++) {
       const bar = this.bars[i];
 
-      const {
-        x,
-        y,
-        width,
-        height,
-        title,
-        isSelected,
-        leftSliderSelected,
-        rightSliderSelected
-      } = bar;
-
-      if (!this.isMouseDragging || this.selectedBar !== bar) {
-        if (i % 2 === 0) {
-          this.ctx.fillStyle = isSelected
-            ? COLORS.milestone.bar.even.highlighted
-            : COLORS.milestone.bar.even.default;
-        } else {
-          this.ctx.fillStyle = isSelected
-            ? COLORS.milestone.bar.odd.highlighted
-            : COLORS.milestone.bar.odd.default;
-        }
-
-        roundRect(this.ctx, x, y, width, height, DEFAULT_RADIUS, true, false);
-
-        if (leftSliderSelected) {
-          if (i % 2 === 0) {
-            this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
-          } else {
-            this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
-          }
-
-          roundRect(
-            this.ctx,
-            x - SLIDER_WIDTH / 2,
-            y - SLIDER_WIDTH / 5,
-            SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2,
-            DEFAULT_RADIUS,
-            true,
-            false
-          );
-
-          this.ctx.lineWidth = 1;
-          this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-          this.ctx.beginPath();
-          this.ctx.moveTo(x, y + SLIDER_WIDTH);
-          this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
-          this.ctx.closePath();
-          this.ctx.stroke();
-        }
-
-        if (rightSliderSelected) {
-          if (i % 2 === 0) {
-            this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
-          } else {
-            this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
-          }
-
-          roundRect(
-            this.ctx,
-            x + width - SLIDER_WIDTH / 2,
-            y - SLIDER_WIDTH / 5,
-            SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2,
-            DEFAULT_RADIUS,
-            true,
-            false
-          );
-
-          this.ctx.lineWidth = 1;
-          this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-          this.ctx.beginPath();
-          this.ctx.moveTo(x + width, y + SLIDER_WIDTH);
-          this.ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
-          this.ctx.closePath();
-          this.ctx.stroke();
-        }
-
-        this.ctx.fillStyle = FONTS.milestone.label.color;
-        this.ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
-
-        const labelWidth = this.ctx.measureText(title).width;
-        this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
-      } else if (this.isMouseDragging && this.selectedBar === bar) {
-        if (i % 2 === 0) {
-          this.ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
-          this.ctx.fillStyle = COLORS.milestone.bar.even.dragging;
-        } else {
-          this.ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
-          this.ctx.fillStyle = COLORS.milestone.bar.odd.dragging;
-        }
-
-        roundRect(this.ctx, x, y, width, height, 5, true, true);
-
-        if (!this.selectedSlider) {
-          if (i % 2 === 0) {
-            this.ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
-          } else {
-            this.ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
-          }
-
-          roundRect(this.ctx, x, y, width, height, 5, true, true, 5, true, true);
-        } else if (this.selectedSlider === "left") {
-          if (i % 2 === 0) {
-            this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
-          } else {
-            this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
-          }
-
-          roundRect(
-            this.ctx,
-            x - SLIDER_WIDTH / 2,
-            y - SLIDER_WIDTH / 5,
-            SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2,
-            DEFAULT_RADIUS,
-            true,
-            false
-          );
-
-          this.ctx.lineWidth = 1;
-          this.ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
-          this.ctx.beginPath();
-          this.ctx.moveTo(x, y + SLIDER_WIDTH);
-          this.ctx.lineTo(x, y + height - SLIDER_WIDTH);
-          this.ctx.closePath();
-          this.ctx.stroke();
-        } else if (this.selectedSlider === "right") {
-          if (i % 2 === 0) {
-            this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
-          } else {
-            this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
-          }
-
-          roundRect(
-            this.ctx,
-            x + width - SLIDER_WIDTH / 2,
-            y - SLIDER_WIDTH / 5,
-            SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2,
-            DEFAULT_RADIUS,
-            true,
-            false
-          );
-
-          this.ctx.lineWidth = 1;
-          this.ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-          this.ctx.beginPath();
-          this.ctx.moveTo(x + width, y + SLIDER_WIDTH);
-          this.ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
-          this.ctx.closePath();
-          this.ctx.stroke();
-        }
-      }
+      this.drawMilestone(bar, i % 2 === 0);
     }
 
     // draw today's marker line
