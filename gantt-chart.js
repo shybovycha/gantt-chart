@@ -116,8 +116,20 @@ export const createGanttChart = (parentElt, milestones) => {
   let selectedBar = null;
   let selectedSlider = null;
   let isMouseDragging = false;
+  let initialMousePosition = { x: 0, y: 0 };
 
-  canvas.addEventListener("mousedown", () => {
+  canvas.addEventListener("mousedown", (e) => {
+    const { layerX, layerY } = e;
+    const { offsetLeft, offsetTop } = canvas;
+
+    const mouseX = layerX - offsetLeft;
+    const mouseY = layerY - offsetTop;
+
+    initialMousePosition = {
+      x: mouseX,
+      y: mouseY
+    };
+
     if (selectedBar) {
       isMouseDragging = true;
       console.log("Start dragging", selectedBar);
@@ -125,6 +137,11 @@ export const createGanttChart = (parentElt, milestones) => {
   });
 
   canvas.addEventListener("mouseup", () => {
+    initialMousePosition = {
+      x: 0,
+      y: 0
+    };
+
     if (selectedBar) {
       isMouseDragging = false;
       selectedBar = null;
@@ -203,9 +220,37 @@ export const createGanttChart = (parentElt, milestones) => {
       }
     }
 
-    if (!isMouseDragging) {
-    } else {
-      // update selected bar position or width
+    if (isMouseDragging) {
+      // drag the whole bar
+      if (!selectedSlider) {
+        // for now only allow horizontal drags
+        // console.log(
+        //   "Dragging bar horizontally by ",
+        //   mouseX - initialMousePosition.x
+        // );
+
+        selectedBar.x += mouseX - initialMousePosition.x;
+      } else if (selectedSlider === "left") {
+        // console.log(
+        //   "Shrinking and moving bar horizontally by ",
+        //   mouseX - initialMousePosition.x
+        // );
+
+        selectedBar.x += mouseX - initialMousePosition.x;
+        selectedBar.width -= mouseX - initialMousePosition.x;
+      } else if (selectedSlider === "right") {
+        // console.log(
+        //   "Expanding bar horizontally by ",
+        //   mouseX - initialMousePosition.x
+        // );
+
+        selectedBar.width += mouseX - initialMousePosition.x;
+      }
+
+      // TODO: can add debouncing here
+      needsRendering = true;
+
+      initialMousePosition = { x: mouseX, y: mouseY };
     }
 
     if (needsRendering) {
@@ -288,16 +333,30 @@ export const createGanttChart = (parentElt, milestones) => {
 
         ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
       } else if (isMouseDragging && selectedBar === bar) {
-        if (!selectedSlider) {
-          ctx.fillStyle = "rgba(200, 10, 25, 1.0)";
-          ctx.fillRect(x, y, width, height);
+        ctx.fillStyle = "rgba(200, 10, 25, 0.8)";
+        ctx.fillRect(x, y, width, height);
 
-          const gradient = ctx.createLinearGradient(0, 50, 0, 95);
-          gradient.addColorStop(0.5, "#000");
-          gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-          ctx.strokeStyle = gradient;
+        if (!selectedSlider) {
+          ctx.strokeStyle = "rgba(10, 10, 10, 0.8)";
           ctx.strokeRect(x, y, width, height);
-        } else {
+        } else if (selectedSlider === "left") {
+          ctx.fillStyle = "rgba(200, 100, 25, 0.8)";
+
+          ctx.fillRect(
+            x - SLIDER_WIDTH / 2,
+            y - SLIDER_WIDTH / 5,
+            SLIDER_WIDTH,
+            height + (SLIDER_WIDTH / 5) * 2
+          );
+        } else if (selectedSlider === "right") {
+          ctx.fillStyle = "rgba(200, 100, 25, 0.8)";
+
+          ctx.fillRect(
+            x + width - SLIDER_WIDTH / 2,
+            y - SLIDER_WIDTH / 5,
+            SLIDER_WIDTH,
+            height + (SLIDER_WIDTH / 5) * 2
+          );
         }
       }
     }
