@@ -113,6 +113,27 @@ export const createGanttChart = (parentElt, milestones) => {
     bars.push({ x, y, width, height, title });
   }
 
+  let selectedBar = null;
+  let selectedSlider = null;
+  let isMouseDragging = false;
+
+  canvas.addEventListener("mousedown", () => {
+    if (selectedBar) {
+      isMouseDragging = true;
+      console.log("Start dragging", selectedBar);
+    }
+  });
+
+  canvas.addEventListener("mouseup", () => {
+    if (selectedBar) {
+      isMouseDragging = false;
+      selectedBar = null;
+      selectedSlider = null;
+      render();
+      console.log("Stop dragging");
+    }
+  });
+
   // welcome interactions!
   canvas.addEventListener("mousemove", (e) => {
     // console.log('>> ', e.clientX, e.clientY);
@@ -139,37 +160,38 @@ export const createGanttChart = (parentElt, milestones) => {
       bars[i].rightSliderSelected = false;
       bars[i].leftSliderSelected = false;
 
-      if (
-        mouseX > barX + SLIDER_WIDTH / 2 &&
-        mouseX < barX + barWidth - SLIDER_WIDTH / 2 &&
-        mouseY >= barY &&
-        mouseY <= barY + barHeight
-      ) {
-        bars[i].isSelected = true;
-      } else {
-        bars[i].isSelected = false;
-      }
+      if (!isMouseDragging) {
+        if (
+          mouseX > barX + SLIDER_WIDTH / 2 &&
+          mouseX < barX + barWidth - SLIDER_WIDTH / 2 &&
+          mouseY >= barY &&
+          mouseY <= barY + barHeight
+        ) {
+          bars[i].isSelected = true;
+          selectedBar = bars[i];
+        }
 
-      if (
-        mouseX >= barX - SLIDER_WIDTH / 2 &&
-        mouseX <= barX + SLIDER_WIDTH / 2 &&
-        mouseY >= barY &&
-        mouseY <= barY + barHeight
-      ) {
-        bars[i].leftSliderSelected = true;
-      } else {
-        bars[i].leftSliderSelected = false;
-      }
+        if (
+          mouseX >= barX - SLIDER_WIDTH / 2 &&
+          mouseX <= barX + SLIDER_WIDTH / 2 &&
+          mouseY >= barY &&
+          mouseY <= barY + barHeight
+        ) {
+          bars[i].leftSliderSelected = true;
+          selectedBar = bars[i];
+          selectedSlider = "left";
+        }
 
-      if (
-        mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
-        mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
-        mouseY >= barY &&
-        mouseY <= barY + barHeight
-      ) {
-        bars[i].rightSliderSelected = true;
-      } else {
-        bars[i].rightSliderSelected = false;
+        if (
+          mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
+          mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
+          mouseY >= barY &&
+          mouseY <= barY + barHeight
+        ) {
+          bars[i].rightSliderSelected = true;
+          selectedBar = bars[i];
+          selectedSlider = "right";
+        }
       }
 
       if (
@@ -179,6 +201,11 @@ export const createGanttChart = (parentElt, milestones) => {
       ) {
         needsRendering = true;
       }
+    }
+
+    if (!isMouseDragging) {
+    } else {
+      // update selected bar position or width
     }
 
     if (needsRendering) {
@@ -224,41 +251,55 @@ export const createGanttChart = (parentElt, milestones) => {
       } = bar;
       // console.log("Drawing rect at ", x, y, width, height, title, start, end);
 
-      ctx.fillStyle = isSelected
-        ? "rgba(200, 10, 25, 1.0)"
-        : "rgba(220, 220, 220, 0.8)";
+      if (!isMouseDragging || selectedBar !== bar) {
+        ctx.fillStyle = isSelected
+          ? "rgba(200, 10, 25, 1.0)"
+          : "rgba(220, 220, 220, 0.8)";
 
-      ctx.fillRect(x, y, width, height);
+        ctx.fillRect(x, y, width, height);
 
-      if (leftSliderSelected) {
-        ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
+        if (leftSliderSelected) {
+          ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
 
-        ctx.fillRect(
-          x - SLIDER_WIDTH / 2,
-          y - SLIDER_WIDTH / 5,
-          SLIDER_WIDTH,
-          height + (SLIDER_WIDTH / 5) * 2
-        );
+          ctx.fillRect(
+            x - SLIDER_WIDTH / 2,
+            y - SLIDER_WIDTH / 5,
+            SLIDER_WIDTH,
+            height + (SLIDER_WIDTH / 5) * 2
+          );
+        }
+
+        if (rightSliderSelected) {
+          ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
+
+          ctx.fillRect(
+            x + width - SLIDER_WIDTH / 2,
+            y - SLIDER_WIDTH / 5,
+            SLIDER_WIDTH,
+            height + (SLIDER_WIDTH / 5) * 2
+          );
+        }
+
+        // TODO count for label' width
+        ctx.fillStyle = "black";
+        ctx.font = `${fontSize}px Sans Serif`;
+
+        console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
+
+        ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
+      } else if (isMouseDragging && selectedBar === bar) {
+        if (!selectedSlider) {
+          ctx.fillStyle = "rgba(200, 10, 25, 1.0)";
+          ctx.fillRect(x, y, width, height);
+
+          const gradient = ctx.createLinearGradient(0, 50, 0, 95);
+          gradient.addColorStop(0.5, "#000");
+          gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.strokeStyle = gradient;
+          ctx.strokeRect(x, y, width, height);
+        } else {
+        }
       }
-
-      if (rightSliderSelected) {
-        ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
-
-        ctx.fillRect(
-          x + width - SLIDER_WIDTH / 2,
-          y - SLIDER_WIDTH / 5,
-          SLIDER_WIDTH,
-          height + (SLIDER_WIDTH / 5) * 2
-        );
-      }
-
-      // TODO count for label' width
-      ctx.fillStyle = "black";
-      ctx.font = `${fontSize}px Sans Serif`;
-
-      console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
-
-      ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
     }
 
     // draw today's marker line
