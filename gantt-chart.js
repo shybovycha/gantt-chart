@@ -25,8 +25,8 @@ export const createGanttChart = (parentElt, milestones) => {
     canvas.outerHeight ||
     (milestones.length + 1) * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2);
 
-  // canvas.style.width = `${canvasWidth / 2}px`;
-  // canvas.style.height = `${canvasHeight / 2}px`;
+  canvas.style.width = `${canvasWidth / 2}px`;
+  canvas.style.height = `${canvasHeight / 2}px`;
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
@@ -122,8 +122,8 @@ export const createGanttChart = (parentElt, milestones) => {
     const { layerX, layerY } = e;
     const { offsetLeft, offsetTop } = canvas;
 
-    const mouseX = layerX - offsetLeft;
-    const mouseY = layerY - offsetTop;
+    const mouseX = (layerX - offsetLeft) * 2;
+    const mouseY = (layerY - offsetTop) * 2;
 
     initialMousePosition = {
       x: mouseX,
@@ -157,8 +157,10 @@ export const createGanttChart = (parentElt, milestones) => {
     const { layerX, layerY } = e;
     const { offsetLeft, offsetTop } = canvas;
 
-    const mouseX = layerX - offsetLeft;
-    const mouseY = layerY - offsetTop;
+    const mouseX = (layerX - offsetLeft) * 2;
+    const mouseY = (layerY - offsetTop) * 2;
+
+    // console.log("mouse", mouseX, mouseY);
 
     let needsRendering = false;
 
@@ -197,9 +199,7 @@ export const createGanttChart = (parentElt, milestones) => {
           bars[i].leftSliderSelected = true;
           selectedBar = bars[i];
           selectedSlider = "left";
-        }
-
-        if (
+        } else if (
           mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
           mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
           mouseY >= barY &&
@@ -208,6 +208,8 @@ export const createGanttChart = (parentElt, milestones) => {
           bars[i].rightSliderSelected = true;
           selectedBar = bars[i];
           selectedSlider = "right";
+        } else if (selectedBar === bars[i]) {
+          selectedSlider = null;
         }
       }
 
