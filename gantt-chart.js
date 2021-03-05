@@ -14,6 +14,7 @@ const DEFAULT_ROW_PADDING = 10 * SCALE_FACTOR;
 const DEFAULT_RADIUS = 5 * SCALE_FACTOR;
 const SLIDER_WIDTH = 10 * SCALE_FACTOR;
 const HEADER_BORDER_WIDTH = 1.5 * SCALE_FACTOR;
+const TODAY_MARKER_WIDTH = 1.5 * SCALE_FACTOR;
 
 const COLORS = {
   milestone: {
@@ -294,6 +295,8 @@ export class GanttChart extends EventTarget {
 
     let needsRendering = false;
 
+    let selectedBarFound = null;
+
     for (let i = 0; i < this.bars.length; i++) {
       const bar = this.bars[i];
 
@@ -319,7 +322,7 @@ export class GanttChart extends EventTarget {
           mouseY <= barY + barHeight
         ) {
           bar.isSelected = true;
-          this.selectedBar = bar;
+          selectedBarFound = bar;
         }
 
         if (
@@ -329,7 +332,7 @@ export class GanttChart extends EventTarget {
           mouseY <= barY + barHeight
         ) {
           bar.leftSliderSelected = true;
-          this.selectedBar = bar;
+          selectedBarFound = bar;
           this.selectedSlider = LEFT_SLIDER;
         } else if (
           mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
@@ -338,7 +341,7 @@ export class GanttChart extends EventTarget {
           mouseY <= barY + barHeight
         ) {
           bar.rightSliderSelected = true;
-          this.selectedBar = bar;
+          selectedBarFound = bar;
           this.selectedSlider = RIGHT_SLIDER;
         } else if (this.selectedBar === bar) {
           this.selectedSlider = null;
@@ -352,6 +355,10 @@ export class GanttChart extends EventTarget {
       ) {
         needsRendering = true;
       }
+    }
+
+    if (!this.isMouseDragging) {
+      this.selectedBar = selectedBarFound;
     }
 
     if (this.isMouseDragging) {
@@ -543,6 +550,8 @@ export class GanttChart extends EventTarget {
       const x = this.scaleX(new Date());
 
       this.ctx.strokeStyle = COLORS.scale.marker.today;
+      this.ctx.lineWidth = TODAY_MARKER_WIDTH;
+
       this.ctx.beginPath();
       this.ctx.moveTo(x, DEFAULT_FONT_SIZE);
       this.ctx.lineTo(x, this.canvasHeight);
