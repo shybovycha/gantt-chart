@@ -18,6 +18,32 @@ export const createGanttChart = (parentElt, milestones) => {
 
   const SLIDER_WIDTH = 10;
 
+  const SCALE_FACTOR = 1;
+
+  const COLORS = {
+    milestone: {
+      bar: {
+        highlighted: "rgba(112, 162, 236, 0.8)",
+        dragging: "rgba(112, 162, 236, 0.6)",
+        draggingBorder: "rgba(74, 137, 232, 1)",
+        default: "rgba(112, 162, 236, 1)"
+      },
+      slider: {
+        highlighted: "rgba(82, 98, 224, 1)",
+        dragging: "rgba(125, 137, 232, 1)"
+      }
+    },
+    scale: {
+      bar: {
+        odd: "rgba(255, 255, 255, 0.9)",
+        even: "rgba(220, 225, 220, 0.4)"
+      },
+      marker: {
+        today: "rgba(238, 156, 93, 1)"
+      }
+    }
+  };
+
   const fontSize = DEFAULT_FONT_SIZE;
 
   const canvasWidth = canvas.outerWidth || DEFAULT_WIDTH;
@@ -25,13 +51,13 @@ export const createGanttChart = (parentElt, milestones) => {
     canvas.outerHeight ||
     (milestones.length + 1) * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2);
 
-  canvas.style.width = `${canvasWidth / 2}px`;
-  canvas.style.height = `${canvasHeight / 2}px`;
+  canvas.style.width = `${canvasWidth / SCALE_FACTOR}px`;
+  canvas.style.height = `${canvasHeight / SCALE_FACTOR}px`;
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
-  console.log("canvas", canvasWidth, canvasHeight);
+  // console.log("canvas", canvasWidth, canvasHeight);
 
   // create header / scale
   // find the shortest and the longest milestones
@@ -55,6 +81,51 @@ export const createGanttChart = (parentElt, milestones) => {
   const overallColumns = Math.ceil(overallDuration / columnDuration);
 
   const columnWidth = Math.ceil(canvasWidth / overallColumns);
+
+  const roundRect = (ctx, x, y, width, height, radius, fill, stroke) => {
+    if (typeof stroke === "undefined") {
+      stroke = false;
+    }
+
+    if (typeof radius === "undefined") {
+      radius = 0;
+    }
+
+    if (typeof radius === "number") {
+      radius = { tl: radius, tr: radius, br: radius, bl: radius };
+    } else {
+      const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
+
+      for (let side of defaultRadius) {
+        radius[side] = radius[side] || defaultRadius[side];
+      }
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x + radius.tl, y);
+    ctx.lineTo(x + width - radius.tr, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+    ctx.lineTo(x + width, y + height - radius.br);
+    ctx.quadraticCurveTo(
+      x + width,
+      y + height,
+      x + width - radius.br,
+      y + height
+    );
+    ctx.lineTo(x + radius.bl, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+    ctx.lineTo(x, y + radius.tl);
+    ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+    ctx.closePath();
+
+    if (fill) {
+      ctx.fill();
+    }
+
+    if (stroke) {
+      ctx.stroke();
+    }
+  };
 
   // console.log(
   //   "Columns:",
@@ -87,14 +158,14 @@ export const createGanttChart = (parentElt, milestones) => {
   const scaleX = (date) =>
     Math.ceil((date.getTime() - minStart) * (canvasWidth / overallDuration));
 
-  console.log(
-    "scaled start",
-    minStart,
-    scaleX(minStart),
-    "scaled end",
-    maxEnd,
-    scaleX(maxEnd)
-  );
+  // console.log(
+  //   "scaled start",
+  //   minStart,
+  //   scaleX(minStart),
+  //   "scaled end",
+  //   maxEnd,
+  //   scaleX(maxEnd)
+  // );
 
   const bars = [];
 
@@ -122,8 +193,8 @@ export const createGanttChart = (parentElt, milestones) => {
     const { layerX, layerY } = e;
     const { offsetLeft, offsetTop } = canvas;
 
-    const mouseX = (layerX - offsetLeft) * 2;
-    const mouseY = (layerY - offsetTop) * 2;
+    const mouseX = (layerX - offsetLeft) * SCALE_FACTOR;
+    const mouseY = (layerY - offsetTop) * SCALE_FACTOR;
 
     initialMousePosition = {
       x: mouseX,
@@ -132,7 +203,7 @@ export const createGanttChart = (parentElt, milestones) => {
 
     if (selectedBar) {
       isMouseDragging = true;
-      console.log("Start dragging", selectedBar);
+      // console.log("Start dragging", selectedBar);
     }
   });
 
@@ -146,8 +217,9 @@ export const createGanttChart = (parentElt, milestones) => {
       isMouseDragging = false;
       selectedBar = null;
       selectedSlider = null;
+
       render();
-      console.log("Stop dragging");
+      // console.log("Stop dragging");
     }
   });
 
@@ -157,8 +229,8 @@ export const createGanttChart = (parentElt, milestones) => {
     const { layerX, layerY } = e;
     const { offsetLeft, offsetTop } = canvas;
 
-    const mouseX = (layerX - offsetLeft) * 2;
-    const mouseY = (layerY - offsetTop) * 2;
+    const mouseX = (layerX - offsetLeft) * SCALE_FACTOR;
+    const mouseY = (layerY - offsetTop) * SCALE_FACTOR;
 
     // console.log("mouse", mouseX, mouseY);
 
@@ -266,9 +338,9 @@ export const createGanttChart = (parentElt, milestones) => {
     // draw background columns
     for (let i = 0; i < overallColumns; i++) {
       if (i % 2 === 0) {
-        ctx.fillStyle = "rgba(220, 225, 220, 0.4)";
+        ctx.fillStyle = COLORS.scale.bar.even;
       } else {
-        ctx.fillStyle = "white";
+        ctx.fillStyle = COLORS.scale.bar.odd;
       }
 
       // TODO make columns aligned to day/hour/minute
@@ -300,65 +372,146 @@ export const createGanttChart = (parentElt, milestones) => {
 
       if (!isMouseDragging || selectedBar !== bar) {
         ctx.fillStyle = isSelected
-          ? "rgba(200, 10, 25, 1.0)"
-          : "rgba(220, 220, 220, 0.8)";
+          ? COLORS.milestone.bar.highlighted
+          : COLORS.milestone.bar.default;
 
-        ctx.fillRect(x, y, width, height);
+        // ctx.fillRect(x, y, width, height);
+        roundRect(ctx, x, y, width, height, 5, true, false);
 
         if (leftSliderSelected) {
-          ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
+          ctx.fillStyle = COLORS.milestone.slider.highlighted; // "rgba(200, 100, 25, 1.0)";
 
-          ctx.fillRect(
+          // ctx.fillRect(
+          //   x - SLIDER_WIDTH / 2,
+          //   y - SLIDER_WIDTH / 5,
+          //   SLIDER_WIDTH,
+          //   height + (SLIDER_WIDTH / 5) * 2
+          // );
+
+          roundRect(
+            ctx,
             x - SLIDER_WIDTH / 2,
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2
+            height + (SLIDER_WIDTH / 5) * 2,
+            5,
+            true,
+            false
           );
+
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+          ctx.beginPath();
+          ctx.moveTo(x, y + SLIDER_WIDTH);
+          ctx.lineTo(x, y + height - SLIDER_WIDTH);
+          ctx.closePath();
+          ctx.stroke();
         }
 
         if (rightSliderSelected) {
-          ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
+          ctx.fillStyle = COLORS.milestone.slider.highlighted; // "rgba(200, 100, 25, 1.0)";
 
-          ctx.fillRect(
+          // ctx.fillRect(
+          //   x + width - SLIDER_WIDTH / 2,
+          //   y - SLIDER_WIDTH / 5,
+          //   SLIDER_WIDTH,
+          //   height + (SLIDER_WIDTH / 5) * 2
+          // );
+
+          roundRect(
+            ctx,
             x + width - SLIDER_WIDTH / 2,
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2
+            height + (SLIDER_WIDTH / 5) * 2,
+            5,
+            true,
+            false
           );
+
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+          ctx.beginPath();
+          ctx.moveTo(x + width, y + SLIDER_WIDTH);
+          ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
+          ctx.closePath();
+          ctx.stroke();
         }
 
         // TODO count for label' width
         ctx.fillStyle = "black";
         ctx.font = `${fontSize}px Sans Serif`;
 
-        console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
+        // console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
 
         ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
       } else if (isMouseDragging && selectedBar === bar) {
-        ctx.fillStyle = "rgba(200, 10, 25, 0.8)";
-        ctx.fillRect(x, y, width, height);
+        ctx.strokeStyle = COLORS.milestone.bar.draggingBorder;
+        ctx.fillStyle = COLORS.milestone.bar.dragging; // "rgba(200, 10, 25, 0.8)";
+
+        // ctx.fillRect(x, y, width, height);
+        roundRect(ctx, x, y, width, height, 5, true, true);
 
         if (!selectedSlider) {
-          ctx.strokeStyle = "rgba(10, 10, 10, 0.8)";
-          ctx.strokeRect(x, y, width, height);
-        } else if (selectedSlider === "left") {
-          ctx.fillStyle = "rgba(200, 100, 25, 0.8)";
+          ctx.strokeStyle = COLORS.milestone.bar.draggingBorder;
 
-          ctx.fillRect(
+          // ctx.strokeRect(x, y, width, height);
+          roundRect(ctx, x, y, width, height, 5, true, true, 5, true, true);
+        } else if (selectedSlider === "left") {
+          ctx.fillStyle = COLORS.milestone.slider.dragging; // "rgba(150, 50, 25, 1.0)";
+
+          // ctx.fillRect(
+          //   x - SLIDER_WIDTH / 2,
+          //   y - SLIDER_WIDTH / 5,
+          //   SLIDER_WIDTH,
+          //   height + (SLIDER_WIDTH / 5) * 2
+          // );
+          roundRect(
+            ctx,
             x - SLIDER_WIDTH / 2,
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2
+            height + (SLIDER_WIDTH / 5) * 2,
+            5,
+            true,
+            false
           );
-        } else if (selectedSlider === "right") {
-          ctx.fillStyle = "rgba(200, 100, 25, 0.8)";
 
-          ctx.fillRect(
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+          ctx.beginPath();
+          ctx.moveTo(x, y + SLIDER_WIDTH);
+          ctx.lineTo(x, y + height - SLIDER_WIDTH);
+          ctx.closePath();
+          ctx.stroke();
+        } else if (selectedSlider === "right") {
+          ctx.fillStyle = COLORS.milestone.slider.dragging; // "rgba(150, 50, 25, 0.8)";
+
+          // ctx.fillRect(
+          //   x + width - SLIDER_WIDTH / 2,
+          //   y - SLIDER_WIDTH / 5,
+          //   SLIDER_WIDTH,
+          //   height + (SLIDER_WIDTH / 5) * 2
+          // );
+
+          roundRect(
+            ctx,
             x + width - SLIDER_WIDTH / 2,
             y - SLIDER_WIDTH / 5,
             SLIDER_WIDTH,
-            height + (SLIDER_WIDTH / 5) * 2
+            height + (SLIDER_WIDTH / 5) * 2,
+            5,
+            true,
+            false
           );
+
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+          ctx.beginPath();
+          ctx.moveTo(x + width, y + SLIDER_WIDTH);
+          ctx.lineTo(x + width, y + height - SLIDER_WIDTH);
+          ctx.closePath();
+          ctx.stroke();
         }
       }
     }
@@ -367,9 +520,9 @@ export const createGanttChart = (parentElt, milestones) => {
     {
       const x = scaleX(new Date());
 
-      console.log("today", x);
+      // console.log("today", x);
 
-      ctx.strokeStyle = "red";
+      ctx.strokeStyle = COLORS.scale.marker.today;
       ctx.beginPath();
       ctx.moveTo(x, fontSize);
       ctx.lineTo(x, canvasHeight);
