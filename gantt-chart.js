@@ -2,7 +2,7 @@ import {
   addMilliseconds,
   format as formatDate,
   min as minDate,
-  max as maxDate,
+  max as maxDate
 } from "date-fns";
 
 export const createGanttChart = (parentElt, milestones) => {
@@ -16,6 +16,8 @@ export const createGanttChart = (parentElt, milestones) => {
   const DEFAULT_FONT_SIZE = 12;
   const DEFAULT_ROW_PADDING = 10;
 
+  const SLIDER_WIDTH = 10;
+
   const fontSize = DEFAULT_FONT_SIZE;
 
   const canvasWidth = canvas.outerWidth || DEFAULT_WIDTH;
@@ -23,9 +25,8 @@ export const createGanttChart = (parentElt, milestones) => {
     canvas.outerHeight ||
     (milestones.length + 1) * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2);
 
-  // this makes a 2x image, which looks better on hi-res displays (like Retina and 4K)
-  canvas.style.width = `${canvasWidth / 2}px`;
-  canvas.style.height = `${canvasHeight / 2}px`;
+  // canvas.style.width = `${canvasWidth / 2}px`;
+  // canvas.style.height = `${canvasHeight / 2}px`;
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
@@ -54,27 +55,6 @@ export const createGanttChart = (parentElt, milestones) => {
   const overallColumns = Math.ceil(overallDuration / columnDuration);
 
   const columnWidth = Math.ceil(canvasWidth / overallColumns);
-
-  // draw columns
-  for (let i = 0; i < overallColumns; i++) {
-    if (i % 2 === 0) {
-      ctx.fillStyle = "rgba(220, 225, 220, 0.4)";
-    } else {
-      ctx.fillStyle = "white";
-    }
-
-    // TODO make columns aligned to day/hour/minute
-    ctx.fillRect(i * columnWidth, 0, columnWidth, canvasHeight);
-
-    ctx.fillStyle = "black";
-    ctx.font = `${fontSize}px Sans Serif`;
-
-    const columnDate = addMilliseconds(minStart, i * columnDuration);
-
-    const columnLabel = formatDate(columnDate, "dd/MM/yy hh:mm");
-
-    ctx.fillText(columnLabel, i * columnWidth, fontSize);
-  }
 
   // console.log(
   //   "Columns:",
@@ -116,6 +96,8 @@ export const createGanttChart = (parentElt, milestones) => {
     scaleX(maxEnd)
   );
 
+  const bars = [];
+
   let currentRow = 0;
 
   for (let { title, start, end } of milestones) {
@@ -128,30 +110,170 @@ export const createGanttChart = (parentElt, milestones) => {
     const width = scaleX(end) - x;
     const height = DEFAULT_ROW_HEIGHT;
 
-    // console.log("Drawing rect at ", x, y, width, height, title, start, end);
-
-    ctx.fillStyle = "rgba(220, 220, 220, 0.8)";
-    ctx.fillRect(x, y, width, height);
-
-    // TODO count for label' width
-    ctx.fillStyle = "black";
-    ctx.font = `${fontSize}px Sans Serif`;
-
-    console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
-
-    ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
+    bars.push({ x, y, width, height, title });
   }
 
-  // draw today's marker line
-  {
-    const x = scaleX(new Date());
+  // welcome interactions!
+  canvas.addEventListener("mousemove", (e) => {
+    // console.log('>> ', e.clientX, e.clientY);
+    const { layerX, layerY } = e;
+    const { offsetLeft, offsetTop } = canvas;
 
-    console.log("today", x);
+    const mouseX = layerX - offsetLeft;
+    const mouseY = layerY - offsetTop;
 
-    ctx.strokeStyle = "red";
-    ctx.beginPath();
-    ctx.moveTo(x, fontSize);
-    ctx.lineTo(x, canvasHeight);
-    ctx.stroke();
-  }
+    let needsRendering = false;
+
+    for (let i = 0; i < bars.length; i++) {
+      const {
+        x: barX,
+        y: barY,
+        width: barWidth,
+        height: barHeight,
+        isSelected: wasSelected,
+        leftSliderSelected: wasLeftSliderSelected,
+        rightSliderSelected: wasRightSliderSelected
+      } = bars[i];
+
+      bars[i].isSelected = false;
+      bars[i].rightSliderSelected = false;
+      bars[i].leftSliderSelected = false;
+
+      if (
+        mouseX > barX + SLIDER_WIDTH / 2 &&
+        mouseX < barX + barWidth - SLIDER_WIDTH / 2 &&
+        mouseY >= barY &&
+        mouseY <= barY + barHeight
+      ) {
+        bars[i].isSelected = true;
+      } else {
+        bars[i].isSelected = false;
+      }
+
+      if (
+        mouseX >= barX - SLIDER_WIDTH / 2 &&
+        mouseX <= barX + SLIDER_WIDTH / 2 &&
+        mouseY >= barY &&
+        mouseY <= barY + barHeight
+      ) {
+        bars[i].leftSliderSelected = true;
+      } else {
+        bars[i].leftSliderSelected = false;
+      }
+
+      if (
+        mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
+        mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
+        mouseY >= barY &&
+        mouseY <= barY + barHeight
+      ) {
+        bars[i].rightSliderSelected = true;
+      } else {
+        bars[i].rightSliderSelected = false;
+      }
+
+      if (
+        bars[i].isSelected !== wasSelected ||
+        bars[i].leftSliderSelected !== wasLeftSliderSelected ||
+        bars[i].rightSliderSelected !== wasRightSliderSelected
+      ) {
+        needsRendering = true;
+      }
+    }
+
+    if (needsRendering) {
+      render();
+    }
+  });
+
+  const render = () => {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // draw background columns
+    for (let i = 0; i < overallColumns; i++) {
+      if (i % 2 === 0) {
+        ctx.fillStyle = "rgba(220, 225, 220, 0.4)";
+      } else {
+        ctx.fillStyle = "white";
+      }
+
+      // TODO make columns aligned to day/hour/minute
+      ctx.fillRect(i * columnWidth, 0, columnWidth, canvasHeight);
+
+      ctx.fillStyle = "black";
+      ctx.font = `${fontSize}px Sans Serif`;
+
+      const columnDate = addMilliseconds(minStart, i * columnDuration);
+
+      const columnLabel = formatDate(columnDate, "dd/MM/yy hh:mm");
+
+      ctx.fillText(columnLabel, i * columnWidth, fontSize);
+    }
+
+    // draw bars
+    for (let bar of bars) {
+      const {
+        x,
+        y,
+        width,
+        height,
+        title,
+        isSelected,
+        leftSliderSelected,
+        rightSliderSelected
+      } = bar;
+      // console.log("Drawing rect at ", x, y, width, height, title, start, end);
+
+      ctx.fillStyle = isSelected
+        ? "rgba(200, 10, 25, 1.0)"
+        : "rgba(220, 220, 220, 0.8)";
+
+      ctx.fillRect(x, y, width, height);
+
+      if (leftSliderSelected) {
+        ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
+
+        ctx.fillRect(
+          x - SLIDER_WIDTH / 2,
+          y - SLIDER_WIDTH / 5,
+          SLIDER_WIDTH,
+          height + (SLIDER_WIDTH / 5) * 2
+        );
+      }
+
+      if (rightSliderSelected) {
+        ctx.fillStyle = "rgba(200, 100, 25, 1.0)";
+
+        ctx.fillRect(
+          x + width - SLIDER_WIDTH / 2,
+          y - SLIDER_WIDTH / 5,
+          SLIDER_WIDTH,
+          height + (SLIDER_WIDTH / 5) * 2
+        );
+      }
+
+      // TODO count for label' width
+      ctx.fillStyle = "black";
+      ctx.font = `${fontSize}px Sans Serif`;
+
+      console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
+
+      ctx.fillText(title, x + width / 2, y + fontSize / 2 + height / 2);
+    }
+
+    // draw today's marker line
+    {
+      const x = scaleX(new Date());
+
+      console.log("today", x);
+
+      ctx.strokeStyle = "red";
+      ctx.beginPath();
+      ctx.moveTo(x, fontSize);
+      ctx.lineTo(x, canvasHeight);
+      ctx.stroke();
+    }
+  };
+
+  render();
 };
