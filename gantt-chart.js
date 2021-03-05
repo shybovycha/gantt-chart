@@ -13,6 +13,7 @@ const DEFAULT_FONT_SIZE = 12 * SCALE_FACTOR;
 const DEFAULT_ROW_PADDING = 10 * SCALE_FACTOR;
 const DEFAULT_RADIUS = 5 * SCALE_FACTOR;
 const SLIDER_WIDTH = 10 * SCALE_FACTOR;
+const HEADER_BORDER_WIDTH = 1.5 * SCALE_FACTOR;
 
 const COLORS = {
   milestone: {
@@ -49,6 +50,10 @@ const COLORS = {
     },
     marker: {
       today: "rgba(238, 156, 93, 1)"
+    },
+    header: {
+      background: "rgba(255, 255, 255, 1)",
+      border: "rgba(220, 225, 220, 0.4)"
     }
   }
 };
@@ -379,6 +384,32 @@ export class GanttChart extends EventTarget {
     }
 
     this.ctx.fillRect(index * this.columnWidth, 0, this.columnWidth, this.canvasHeight);
+
+    const headerHeight = FONTS.scale.column.title.size * 1.5;
+
+    this.ctx.fillStyle = COLORS.scale.header.background;
+    this.ctx.fillRect(index * this.columnWidth, 0, this.columnWidth, headerHeight);
+
+    this.ctx.lineWidth = HEADER_BORDER_WIDTH;
+    this.ctx.strokeStyle = COLORS.scale.header.border;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(index * this.columnWidth, 0);
+    this.ctx.lineTo(index * this.columnWidth, headerHeight);
+    this.ctx.closePath();
+    this.ctx.stroke();
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(index * this.columnWidth, headerHeight);
+    this.ctx.lineTo((index + 1) * this.columnWidth, headerHeight);
+    this.ctx.closePath();
+    this.ctx.stroke();
+
+    this.ctx.beginPath();
+    this.ctx.moveTo((index + 1) * this.columnWidth, headerHeight);
+    this.ctx.lineTo((index + 1) * this.columnWidth, 0);
+    this.ctx.closePath();
+    this.ctx.stroke();
 
     this.ctx.fillStyle = FONTS.scale.column.title.color;
     this.ctx.font = `${FONTS.scale.column.title.size}px ${FONTS.scale.column.title.font}`;
