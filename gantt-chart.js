@@ -90,8 +90,6 @@ export const createGanttChart = (parentElt, milestones) => {
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
-  // console.log("canvas", canvasWidth, canvasHeight);
-
   // create header / scale
   // find the shortest and the longest milestones
   const minStart = minDate(milestones.map(({ start }) => start));
@@ -99,17 +97,6 @@ export const createGanttChart = (parentElt, milestones) => {
 
   const overallDuration = maxEnd.getTime() - minStart.getTime();
 
-  // const shortestMilestoneDuration = milestones
-  //   .map(({ start, end }) => end.getTime() - start.getTime())
-  //   .reduce(
-  //     (acc, duration) => (acc < duration ? acc : duration),
-  //     Number.MAX_VALUE
-  //   );
-
-  // shortest milestone should occupy 3 "columns"
-  // hence the overall number of "columns" is overallDuration / (shortest / 3)
-
-  // const columnDuration = Math.ceil(shortestMilestoneDuration / 3);
   const columnDuration = 24 * 60 * 60 * 1000;
 
   const overallColumns = Math.ceil(overallDuration / columnDuration);
@@ -161,16 +148,6 @@ export const createGanttChart = (parentElt, milestones) => {
     }
   };
 
-  // console.log(
-  //   "Columns:",
-  //   overallColumns,
-  //   "of",
-  //   columnWidth,
-  //   "px",
-  //   columnDuration,
-  //   "ms"
-  // );
-
   /*
    * linear interpolation of a point (x, y) between two known points (x0, y0) and (x1, y1):
    *
@@ -191,15 +168,6 @@ export const createGanttChart = (parentElt, milestones) => {
    */
   const scaleX = (date) =>
     Math.ceil((date.getTime() - minStart) * (canvasWidth / overallDuration));
-
-  // console.log(
-  //   "scaled start",
-  //   minStart,
-  //   scaleX(minStart),
-  //   "scaled end",
-  //   maxEnd,
-  //   scaleX(maxEnd)
-  // );
 
   const bars = [];
 
@@ -237,7 +205,6 @@ export const createGanttChart = (parentElt, milestones) => {
 
     if (selectedBar) {
       isMouseDragging = true;
-      // console.log("Start dragging", selectedBar);
     }
   });
 
@@ -253,20 +220,16 @@ export const createGanttChart = (parentElt, milestones) => {
       selectedSlider = null;
 
       render();
-      // console.log("Stop dragging");
     }
   });
 
   // welcome interactions!
   canvas.addEventListener("mousemove", (e) => {
-    // console.log('>> ', e.clientX, e.clientY);
     const { layerX, layerY } = e;
     const { offsetLeft, offsetTop } = canvas;
 
     const mouseX = (layerX - offsetLeft) * SCALE_FACTOR;
     const mouseY = (layerY - offsetTop) * SCALE_FACTOR;
-
-    // console.log("mouse", mouseX, mouseY);
 
     let needsRendering = false;
 
@@ -332,30 +295,14 @@ export const createGanttChart = (parentElt, milestones) => {
       // drag the whole bar
       if (!selectedSlider) {
         // for now only allow horizontal drags
-        // console.log(
-        //   "Dragging bar horizontally by ",
-        //   mouseX - initialMousePosition.x
-        // );
-
         selectedBar.x += mouseX - initialMousePosition.x;
       } else if (selectedSlider === "left") {
-        // console.log(
-        //   "Shrinking and moving bar horizontally by ",
-        //   mouseX - initialMousePosition.x
-        // );
-
         selectedBar.x += mouseX - initialMousePosition.x;
         selectedBar.width -= mouseX - initialMousePosition.x;
       } else if (selectedSlider === "right") {
-        // console.log(
-        //   "Expanding bar horizontally by ",
-        //   mouseX - initialMousePosition.x
-        // );
-
         selectedBar.width += mouseX - initialMousePosition.x;
       }
 
-      // TODO: can add debouncing here
       needsRendering = true;
 
       initialMousePosition = { x: mouseX, y: mouseY };
@@ -377,7 +324,6 @@ export const createGanttChart = (parentElt, milestones) => {
         ctx.fillStyle = COLORS.scale.bar.odd;
       }
 
-      // TODO make columns aligned to day/hour/minute
       ctx.fillRect(i * columnWidth, 0, columnWidth, canvasHeight);
 
       ctx.fillStyle = FONTS.scale.column.title.color; // "black";
@@ -407,8 +353,6 @@ export const createGanttChart = (parentElt, milestones) => {
         rightSliderSelected
       } = bar;
 
-      // console.log("Drawing rect at ", x, y, width, height, title, start, end);
-
       if (!isMouseDragging || selectedBar !== bar) {
         if (i % 2 === 0) {
           ctx.fillStyle = isSelected
@@ -420,22 +364,14 @@ export const createGanttChart = (parentElt, milestones) => {
             : COLORS.milestone.bar.odd.default;
         }
 
-        // ctx.fillRect(x, y, width, height);
         roundRect(ctx, x, y, width, height, DEFAULT_RADIUS, true, false);
 
         if (leftSliderSelected) {
           if (i % 2 === 0) {
-            ctx.fillStyle = COLORS.milestone.slider.even.highlighted; // "rgba(200, 100, 25, 1.0)";
+            ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
           } else {
-            ctx.fillStyle = COLORS.milestone.slider.odd.highlighted; // "rgba(200, 100, 25, 1.0)";
+            ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
           }
-
-          // ctx.fillRect(
-          //   x - SLIDER_WIDTH / 2,
-          //   y - SLIDER_WIDTH / 5,
-          //   SLIDER_WIDTH,
-          //   height + (SLIDER_WIDTH / 5) * 2
-          // );
 
           roundRect(
             ctx,
@@ -459,17 +395,10 @@ export const createGanttChart = (parentElt, milestones) => {
 
         if (rightSliderSelected) {
           if (i % 2 === 0) {
-            ctx.fillStyle = COLORS.milestone.slider.even.highlighted; // "rgba(200, 100, 25, 1.0)";
+            ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
           } else {
-            ctx.fillStyle = COLORS.milestone.slider.odd.highlighted; // "rgba(200, 100, 25, 1.0)";
+            ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
           }
-
-          // ctx.fillRect(
-          //   x + width - SLIDER_WIDTH / 2,
-          //   y - SLIDER_WIDTH / 5,
-          //   SLIDER_WIDTH,
-          //   height + (SLIDER_WIDTH / 5) * 2
-          // );
 
           roundRect(
             ctx,
@@ -491,24 +420,20 @@ export const createGanttChart = (parentElt, milestones) => {
           ctx.stroke();
         }
 
-        // TODO count for label' width
-        ctx.fillStyle = FONTS.milestone.label.color; // "black";
+        ctx.fillStyle = FONTS.milestone.label.color;
         ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
-
-        // console.log("bar", title, x + width / 2, y + fontSize / 2 + height / 2);
 
         const labelWidth = ctx.measureText(title).width;
         ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + fontSize / 2 + height / 2);
       } else if (isMouseDragging && selectedBar === bar) {
         if (i % 2 === 0) {
           ctx.strokeStyle = COLORS.milestone.bar.even.draggingBorder;
-          ctx.fillStyle = COLORS.milestone.bar.even.dragging; // "rgba(200, 10, 25, 0.8)";
+          ctx.fillStyle = COLORS.milestone.bar.even.dragging;
         } else {
           ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
-          ctx.fillStyle = COLORS.milestone.bar.odd.dragging; // "rgba(200, 10, 25, 0.8)";
+          ctx.fillStyle = COLORS.milestone.bar.odd.dragging;
         }
 
-        // ctx.fillRect(x, y, width, height);
         roundRect(ctx, x, y, width, height, 5, true, true);
 
         if (!selectedSlider) {
@@ -518,21 +443,14 @@ export const createGanttChart = (parentElt, milestones) => {
             ctx.strokeStyle = COLORS.milestone.bar.odd.draggingBorder;
           }
 
-          // ctx.strokeRect(x, y, width, height);
           roundRect(ctx, x, y, width, height, 5, true, true, 5, true, true);
         } else if (selectedSlider === "left") {
           if (i % 2 === 0) {
-            ctx.fillStyle = COLORS.milestone.slider.even.dragging; // "rgba(150, 50, 25, 1.0)";
+            ctx.fillStyle = COLORS.milestone.slider.even.dragging;
           } else {
-            ctx.fillStyle = COLORS.milestone.slider.odd.dragging; // "rgba(150, 50, 25, 1.0)";
+            ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
           }
 
-          // ctx.fillRect(
-          //   x - SLIDER_WIDTH / 2,
-          //   y - SLIDER_WIDTH / 5,
-          //   SLIDER_WIDTH,
-          //   height + (SLIDER_WIDTH / 5) * 2
-          // );
           roundRect(
             ctx,
             x - SLIDER_WIDTH / 2,
@@ -553,17 +471,10 @@ export const createGanttChart = (parentElt, milestones) => {
           ctx.stroke();
         } else if (selectedSlider === "right") {
           if (i % 2 === 0) {
-            ctx.fillStyle = COLORS.milestone.slider.even.dragging; // "rgba(150, 50, 25, 0.8)";
+            ctx.fillStyle = COLORS.milestone.slider.even.dragging;
           } else {
-            ctx.fillStyle = COLORS.milestone.slider.odd.dragging; // "rgba(150, 50, 25, 0.8)";
+            ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
           }
-
-          // ctx.fillRect(
-          //   x + width - SLIDER_WIDTH / 2,
-          //   y - SLIDER_WIDTH / 5,
-          //   SLIDER_WIDTH,
-          //   height + (SLIDER_WIDTH / 5) * 2
-          // );
 
           roundRect(
             ctx,
@@ -590,8 +501,6 @@ export const createGanttChart = (parentElt, milestones) => {
     // draw today's marker line
     {
       const x = scaleX(new Date());
-
-      // console.log("today", x);
 
       ctx.strokeStyle = COLORS.scale.marker.today;
       ctx.beginPath();
