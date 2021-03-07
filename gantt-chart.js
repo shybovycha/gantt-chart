@@ -22,6 +22,8 @@ const CONNECTION_ARROW_WIDTH = (CONNECTION_OFFSET / 2);
 const CONNECTION_ARROW_HEIGHT = (CONNECTION_OFFSET / 3);
 const CONNECTION_LINE_WIDTH = 2;
 
+const MIN_COLUMN_WIDTH = 40 * SCALE_FACTOR;
+
 const COLORS = {
   milestone: {
     bar: {
@@ -245,6 +247,33 @@ export class GanttChart extends EventTarget {
     this.isMouseDragging = false;
     this.initialMousePosition = { x: 0, y: 0 };
     this.initialBar = null;
+  }
+
+  /**
+   * Zooms in or out, depending on {@param factor}.
+   *
+   * @param {number} factor zooming factor
+   */
+  zoom(factor) {
+    if (this.columnWidth <= MIN_COLUMN_WIDTH) {
+      console.error("Can not zoom out further");
+      return;
+    }
+
+    const originalDuration = this.overallDuration;
+
+    this.columnWidth = Math.floor(this.columnWidth * factor);
+    this.overallColumns = Math.ceil(this.canvasWidth / this.columnWidth);
+    this.overallDuration = this.columnDuration * this.overallColumns;
+
+    const durationDiff = this.overallDuration - originalDuration;
+
+    this.minStart = addMilliseconds(this.minStart, durationDiff / -2);
+    this.maxEnd = addMilliseconds(this.minStart, durationDiff / 2);
+
+    this.initializeBars();
+
+    this.render();
   }
 
   barToEventDetail({ x, width, id }) {

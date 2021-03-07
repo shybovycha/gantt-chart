@@ -48,9 +48,17 @@ const data = [
   },
 ];
 
-const chart = new GanttChart(document.querySelector('#chart'), data);
+const parentElt = document.querySelector('#chart');
+
+const chart = new GanttChart(parentElt, data);
 
 chart.addEventListener('milestonemove', (e) => console.log('Milestone moved', e.detail));
 chart.addEventListener('milestoneresize', (e) => console.log('Milestone resized', e.detail));
 
 chart.render();
+
+const zoomOutBtn = document.querySelector('#zoom-out');
+zoomOutBtn.addEventListener('click', () => chart.zoom(0.75));
+
+const zoomInBtn = document.querySelector('#zoom-in');
+zoomInBtn.addEventListener('click', () => chart.zoom(1.25));
