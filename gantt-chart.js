@@ -1,5 +1,6 @@
 import {
   addMilliseconds,
+  // startOfDay,
   format as formatDate,
   min as minDate,
   max as maxDate
@@ -230,8 +231,8 @@ export class GanttChart extends EventTarget {
 
   barToEventDetail({ x, width, title, id }) {
     return {
-      start: this.scaleDate(x),
-      end: this.scaleDate(x + width),
+      start: new Date(this.scaleDate(x)),
+      end: new Date(this.scaleDate(x + width)),
       title,
       id
     };
@@ -256,9 +257,10 @@ export class GanttChart extends EventTarget {
     };
 
     if (this.selectedBar) {
-      this.isMouseDragging = true;
       this.initialBar = { ...this.selectedBar };
     }
+
+    this.isMouseDragging = true;
   }
 
   onMouseUp() {
@@ -277,13 +279,23 @@ export class GanttChart extends EventTarget {
         this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_MOVED, { detail: { from, to } }));
       }
 
-      this.isMouseDragging = false;
+      {
+        const milestone = this.milestones.find(({ id }) => id === this.selectedBar.id);
+
+        milestone.start = new Date(this.scaleDate(this.selectedBar.x));
+        milestone.end = new Date(this.scaleDate(this.selectedBar.x + this.selectedBar.width));
+
+        this.initializeBars();
+      }
+
       this.selectedBar = null;
       this.selectedSlider = null;
       this.initialBar = null;
 
       this.render();
     }
+
+    this.isMouseDragging = false;
   }
 
   onMouseMove(evt) {
@@ -293,7 +305,25 @@ export class GanttChart extends EventTarget {
     const mouseX = (layerX - offsetLeft) * SCALE_FACTOR;
     const mouseY = (layerY - offsetTop) * SCALE_FACTOR;
 
+    const deltaX = mouseX - this.initialMousePosition.x;
+
     let needsRendering = false;
+
+    if (this.isMouseDragging && !this.selectedBar) {
+      const deltaTime = this.scaleDate(deltaX) - this.minStart.getTime();
+
+      this.minStart = addMilliseconds(this.minStart, -deltaTime);
+      this.maxEnd = addMilliseconds(this.maxEnd, -deltaTime);
+
+      this.initializeColumns();
+      this.initializeBars();
+
+      this.initialMousePosition = { x: mouseX, y: mouseY };
+
+      this.render();
+
+      return;
+    }
 
     let selectedBarFound = null;
 
@@ -365,12 +395,12 @@ export class GanttChart extends EventTarget {
       // drag the whole bar
       if (!this.selectedSlider) {
         // for now only allow horizontal drags
-        this.selectedBar.x += mouseX - this.initialMousePosition.x;
+        this.selectedBar.x += deltaX;
       } else if (this.selectedSlider === LEFT_SLIDER) {
-        this.selectedBar.x += mouseX - this.initialMousePosition.x;
-        this.selectedBar.width -= mouseX - this.initialMousePosition.x;
+        this.selectedBar.x += deltaX;
+        this.selectedBar.width -= deltaX;
       } else if (this.selectedSlider === RIGHT_SLIDER) {
-        this.selectedBar.width += mouseX - this.initialMousePosition.x;
+        this.selectedBar.width += deltaX;
       }
 
       needsRendering = true;
@@ -559,7 +589,12 @@ export class GanttChart extends EventTarget {
     }
   }
 
-  /*
+  /**
+   * Converts a date to a point on a chart
+   *
+   * @param {Date} date date to convert
+   * @returns {number} point (horizontal axis, x) on a chart on a scale
+   *
    * linear interpolation of a point (x, y) between two known points (x0, y0) and (x1, y1):
    *
    * y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
@@ -582,6 +617,11 @@ export class GanttChart extends EventTarget {
   }
 
   /**
+   * Converts a position on a chart to a Date (timestamp, in fact).
+   *
+   * @param {number} x the point on a chart
+   * @returns {number} time, in millis, the corresponding date on a scale
+   *
    * inverse to {@link scaleX} linear interpolation
    *
    * y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
@@ -598,7 +638,7 @@ export class GanttChart extends EventTarget {
    *
    */
   scaleDate(x) {
-    return new Date(Math.ceil(this.minStart.getTime() + (x * (this.overallDuration / this.canvasWidth))));
+    return Math.ceil(this.minStart.getTime() + (x * (this.overallDuration / this.canvasWidth)));
   }
 }
 
