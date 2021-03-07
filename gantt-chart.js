@@ -78,6 +78,8 @@ const FONTS = {
   }
 };
 
+const HEADER_HEIGHT = FONTS.scale.column.title.size * 1.5;
+
 const RIGHT_SLIDER = Symbol("right");
 const LEFT_SLIDER = Symbol("left");
 
@@ -172,7 +174,7 @@ export class GanttChart extends EventTarget {
     this.canvasWidth = this.canvas.outerWidth || DEFAULT_WIDTH;
     this.canvasHeight =
       this.canvas.outerHeight ||
-      (this.milestones.length + 1) * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2);
+      HEADER_HEIGHT + (this.milestones.length * (DEFAULT_ROW_HEIGHT + (DEFAULT_ROW_PADDING * 2)));
 
     this.canvas.style.width = `${this.canvasWidth / SCALE_FACTOR}px`;
     this.canvas.style.height = `${this.canvasHeight / SCALE_FACTOR}px`;
@@ -208,7 +210,7 @@ export class GanttChart extends EventTarget {
     for (let { title, start, end, id, completed } of this.milestones) {
       const x = this.scaleX(start);
       const y =
-        DEFAULT_FONT_SIZE +
+        HEADER_HEIGHT +
         currentRow++ * (DEFAULT_ROW_HEIGHT + DEFAULT_ROW_PADDING * 2) +
         DEFAULT_ROW_PADDING;
 
@@ -438,28 +440,26 @@ export class GanttChart extends EventTarget {
 
     this.ctx.fillRect(x, 0, this.columnWidth, this.canvasHeight);
 
-    const headerHeight = FONTS.scale.column.title.size * 1.5;
-
     this.ctx.fillStyle = COLORS.scale.header.background;
-    this.ctx.fillRect(x, 0, this.columnWidth, headerHeight);
+    this.ctx.fillRect(x, 0, this.columnWidth, HEADER_HEIGHT);
 
     this.ctx.lineWidth = HEADER_BORDER_WIDTH;
     this.ctx.strokeStyle = COLORS.scale.header.border;
 
     this.ctx.beginPath();
     this.ctx.moveTo(x, 0);
-    this.ctx.lineTo(x, headerHeight);
+    this.ctx.lineTo(x, HEADER_HEIGHT);
     this.ctx.closePath();
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo(x, headerHeight);
-    this.ctx.lineTo(x + width, headerHeight);
+    this.ctx.moveTo(x, HEADER_HEIGHT);
+    this.ctx.lineTo(x + width, HEADER_HEIGHT);
     this.ctx.closePath();
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo(x + width, headerHeight);
+    this.ctx.moveTo(x + width, HEADER_HEIGHT);
     this.ctx.lineTo(x + width, 0);
     this.ctx.closePath();
     this.ctx.stroke();
