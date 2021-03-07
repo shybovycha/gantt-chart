@@ -560,6 +560,20 @@ export class GanttChart extends EventTarget {
     }
   }
 
+  drawTodayMarker() {
+    const x = this.scaleX(new Date());
+
+    const headerHeight = FONTS.scale.column.title.size * 1.5;
+
+    this.ctx.strokeStyle = COLORS.scale.marker.today;
+    this.ctx.lineWidth = TODAY_MARKER_WIDTH;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, headerHeight);
+    this.ctx.lineTo(x, this.canvasHeight);
+    this.ctx.stroke();
+  }
+
   render() {
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
@@ -576,17 +590,7 @@ export class GanttChart extends EventTarget {
     }
 
     // draw today's marker line
-    {
-      const x = this.scaleX(new Date());
-
-      this.ctx.strokeStyle = COLORS.scale.marker.today;
-      this.ctx.lineWidth = TODAY_MARKER_WIDTH;
-
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, DEFAULT_FONT_SIZE);
-      this.ctx.lineTo(x, this.canvasHeight);
-      this.ctx.stroke();
-    }
+    this.drawTodayMarker();
   }
 
   /**
