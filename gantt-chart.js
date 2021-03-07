@@ -17,6 +17,10 @@ const DEFAULT_RADIUS = 5 * SCALE_FACTOR;
 const SLIDER_WIDTH = 10 * SCALE_FACTOR;
 const HEADER_BORDER_WIDTH = 1.5 * SCALE_FACTOR;
 const TODAY_MARKER_WIDTH = 1.5 * SCALE_FACTOR;
+const CONNECTION_OFFSET = 10 * SCALE_FACTOR;
+const CONNECTION_ARROW_WIDTH = (CONNECTION_OFFSET / 2);
+const CONNECTION_ARROW_HEIGHT = (CONNECTION_OFFSET / 3);
+const CONNECTION_LINE_WIDTH = 2;
 
 const COLORS = {
   milestone: {
@@ -42,6 +46,17 @@ const COLORS = {
     },
     slider: {
       symbol: "rgba(0, 0, 0, 1.0)"
+    },
+    connection: {
+      endToEnd: {
+        line: "rgba(100, 100, 100, 1)"
+      },
+      endToStart: {
+        line: "rgba(100, 100, 100, 1)"
+      },
+      startToStart: {
+        line: "rgba(100, 100, 100, 1)"
+      },
     }
   },
   scale: {
@@ -553,11 +568,6 @@ export class GanttChart extends EventTarget {
   }
 
   drawDependencyConnections(bar) {
-    const CONNECTION_OFFSET = 10 * SCALE_FACTOR;
-
-    const CONNECTION_ARROW_WIDTH = (CONNECTION_OFFSET / 2);
-    const CONNECTION_ARROW_HEIGHT = (CONNECTION_OFFSET / 3);
-
     for (let [ id, connectionType ] of Object.entries(bar.dependencies)) {
       const dependency = this.bars.find(other => other.id === id);
 
@@ -567,9 +577,9 @@ export class GanttChart extends EventTarget {
       }
 
       if (connectionType === "start-to-start") {
-        this.ctx.strokeStyle = "red";
-        this.ctx.fillStyle = "red";
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = COLORS.milestone.connection.startToStart.line;
+        this.ctx.fillStyle = COLORS.milestone.connection.startToStart.line;
+        this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
 
         const p0 = [ bar.x, bar.y + bar.height / 2 ];
 
@@ -595,9 +605,9 @@ export class GanttChart extends EventTarget {
         this.ctx.closePath();
         this.ctx.fill();
       } else if (connectionType === "end-to-end") {
-        this.ctx.strokeStyle = "red";
-        this.ctx.fillStyle = "red";
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = COLORS.milestone.connection.endToEnd.line;
+        this.ctx.fillStyle = COLORS.milestone.connection.endToEnd.line;
+        this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
 
         const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
 
@@ -623,9 +633,9 @@ export class GanttChart extends EventTarget {
         this.ctx.closePath();
         this.ctx.fill();
       } else if (connectionType === "end-to-start") {
-        this.ctx.strokeStyle = "red";
-        this.ctx.fillStyle = "red";
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = COLORS.milestone.connection.endToStart.line;
+        this.ctx.fillStyle = COLORS.milestone.connection.endToStart.line;
+        this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
 
         const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
 
