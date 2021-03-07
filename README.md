@@ -9,7 +9,6 @@ See the description, screenshots and more details on [my blog](https://shybovych
 ```bash
 $ yarn install
 $ yarn build
-$ yarn start
 ```
 
-Then, open [localhost:1234/](http://localhost:1234/) in your browser.
+Then, open `example.html` file in your browser.

@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "parcel build example.html",
-    "start": "parcel serve example.html"
+    "build": "webpack"
   },
   "keywords": [
     "gantt",
@@ -15,7 +14,8 @@
   "author": "Artem Shubovych <shybovycha@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "parcel": "^2.0.0-beta.1"
+    "webpack": "^5.24.3",
+    "webpack-cli": "^4.5.0"
   },
   "dependencies": {
     "date-fns": "^2.19.0"
