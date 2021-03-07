@@ -320,12 +320,17 @@ export class GanttChart extends EventTarget {
 
       this.initialMousePosition = { x: mouseX, y: mouseY };
 
+      if (this.canvas.style.cursor != "move") {
+        this.canvas.style.cursor = "move";
+      }
+
       this.render();
 
       return;
     }
 
     let selectedBarFound = null;
+    this.canvas.style.cursor = "auto";
 
     for (let i = 0; i < this.bars.length; i++) {
       const bar = this.bars[i];
@@ -353,6 +358,7 @@ export class GanttChart extends EventTarget {
         ) {
           bar.isSelected = true;
           selectedBarFound = bar;
+          this.canvas.style.cursor = "grab";
         }
 
         if (
@@ -364,6 +370,7 @@ export class GanttChart extends EventTarget {
           bar.leftSliderSelected = true;
           selectedBarFound = bar;
           this.selectedSlider = LEFT_SLIDER;
+          this.canvas.style.cursor = "col-resize";
         } else if (
           mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
           mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
@@ -373,6 +380,7 @@ export class GanttChart extends EventTarget {
           bar.rightSliderSelected = true;
           selectedBarFound = bar;
           this.selectedSlider = RIGHT_SLIDER;
+          this.canvas.style.cursor = "col-resize";
         } else if (this.selectedBar === bar) {
           this.selectedSlider = null;
         }
@@ -392,15 +400,18 @@ export class GanttChart extends EventTarget {
     }
 
     if (this.isMouseDragging) {
-      // drag the whole bar
-      if (!this.selectedSlider) {
+      if (this.selectedBar && !this.selectedSlider) {
+        // drag the whole bar
         // for now only allow horizontal drags
         this.selectedBar.x += deltaX;
+        this.canvas.style.cursor = "grabbing";
       } else if (this.selectedSlider === LEFT_SLIDER) {
         this.selectedBar.x += deltaX;
         this.selectedBar.width -= deltaX;
+        this.canvas.style.cursor = "col-resize";
       } else if (this.selectedSlider === RIGHT_SLIDER) {
         this.selectedBar.width += deltaX;
+        this.canvas.style.cursor = "col-resize";
       }
 
       needsRendering = true;
