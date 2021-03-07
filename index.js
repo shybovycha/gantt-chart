@@ -11,7 +11,8 @@ const data = [
     title: "milestone 1",
     start: addDuration(startOfDay(new Date()), { days: 1 }),
     end: addDuration(startOfDay(new Date()), { days: 2 }),
-    dependencies: []
+    dependencies: [],
+    completed: 0.6,
   },
 
   {
@@ -19,7 +20,8 @@ const data = [
     title: "milestone 2",
     start: addDuration(startOfDay(new Date()), { days: -1 }),
     end: addDuration(startOfDay(new Date()), { days: 1 }),
-    dependencies: []
+    dependencies: [],
+    completed: 0,
   },
 
   {
@@ -27,7 +29,8 @@ const data = [
     title: "milestone 3",
     start: addDuration(startOfDay(new Date()), { days: 4 }),
     end: addDuration(startOfDay(new Date()), { days: 5 }),
-    dependencies: []
+    dependencies: [],
+    completed: 0.75,
   },
 
   {
@@ -35,7 +38,8 @@ const data = [
     title: "milestone 4",
     start: addDuration(startOfDay(new Date()), { days: 3 }),
     end: addDuration(startOfDay(new Date()), { days: 6 }),
-    dependencies: []
+    dependencies: [],
+    completed: 0.2,
   },
 ];
 

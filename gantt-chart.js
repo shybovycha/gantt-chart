@@ -24,14 +24,16 @@ const COLORS = {
       odd: {
         highlighted: "rgba(112, 162, 236, 0.8)",
         dragging: "rgba(112, 162, 236, 0.6)",
-        draggingBorder: "rgba(74, 137, 232, 1)",
-        default: "rgba(112, 162, 236, 1)"
+        draggingBorder: "rgba(61, 111, 185, 1)", // darkened, 20%
+        default: "rgba(112, 162, 236, 1)",
+        progress: "rgba(61, 111, 185, 1)" // darkened, 30%
       },
       even: {
         highlighted: "rgba(93, 238, 166, 0.8)",
         dragging: "rgba(93, 238, 166, 0.6)",
-        draggingBorder: "rgba(42, 187, 115, 0.2)",
-        default: "rgba(93, 238, 166, 1)"
+        draggingBorder: "rgba(42, 187, 115, 0.2)", // darkened, 20%
+        default: "rgba(93, 238, 166, 1)",
+        progress: "rgba(17, 162, 90, 1)"  // darkened, 30%
       }
     },
     slider: {
@@ -207,7 +209,7 @@ export class GanttChart extends EventTarget {
 
     let currentRow = 0;
 
-    for (let { title, start, end, id } of this.milestones) {
+    for (let { title, start, end, id, completed } of this.milestones) {
       const x = this.scaleX(start);
       const y =
         DEFAULT_FONT_SIZE +
@@ -217,7 +219,7 @@ export class GanttChart extends EventTarget {
       const width = this.scaleX(end) - x;
       const height = DEFAULT_ROW_HEIGHT;
 
-      const bar = { x, y, width, height, id, title };
+      const bar = { x, y, width, height, id, title, completed };
       this.bars.push(bar);
     }
   }
@@ -511,7 +513,7 @@ export class GanttChart extends EventTarget {
     this.ctx.stroke();
   }
 
-  drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging }) {
+  drawMilestoneBar({ x, y, width, height, title, completed, isSelected, isEven, isDragging }) {
     if (isDragging) {
       this.ctx.fillStyle = isEven
         ? COLORS.milestone.bar.even.dragging
@@ -534,7 +536,17 @@ export class GanttChart extends EventTarget {
       this.ctx.strokeStyle = '';
     }
 
+    // milestone itself
     roundRect(this.ctx, x, y, width, height, DEFAULT_RADIUS, true, isDragging);
+
+    // milestone progress
+    if (completed > 0) {
+      this.ctx.fillStyle = isEven
+        ? COLORS.milestone.bar.even.progress
+        : COLORS.milestone.bar.odd.progress;
+
+      roundRect(this.ctx, x, y, width * completed, height, DEFAULT_RADIUS, true, isDragging);
+    }
 
     this.ctx.fillStyle = FONTS.milestone.label.color;
     this.ctx.font = `${FONTS.milestone.label.size}px ${FONTS.milestone.label.font}`;
@@ -546,32 +558,29 @@ export class GanttChart extends EventTarget {
   drawMilestone(bar, isEven) {
     const {
       x,
-      y,
       width,
-      height,
-      title,
       isSelected,
       leftSliderSelected,
       rightSliderSelected
     } = bar;
 
     if (!this.isMouseDragging || this.selectedBar !== bar) {
-      this.drawMilestoneBar({ x, y, width, height, title, isSelected: isSelected || leftSliderSelected || rightSliderSelected, isEven, isDragging: false });
+      this.drawMilestoneBar({ ...bar, isSelected: isSelected || leftSliderSelected || rightSliderSelected, isEven, isDragging: false });
 
       if (leftSliderSelected) {
-        this.drawSlider({ x, y, height, isEven, isDragging: false });
+        this.drawSlider({ ...bar, isDragging: false });
       } else if (rightSliderSelected) {
-        this.drawSlider({ x: x + width, y, height, isEven, isDragging: false });
+        this.drawSlider({ ...bar, x: x + width, isEven, isDragging: false });
       }
     } else if (this.isMouseDragging && this.selectedBar === bar) {
-      this.drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging: true });
+      this.drawMilestoneBar({ ...bar, isEven, isDragging: true });
 
       if (!this.selectedSlider) {
-        this.drawMilestoneBar({ x, y, width, height, title, isSelected, isEven, isDragging: true });
+        this.drawMilestoneBar({ ...bar, isEven, isDragging: true });
       } else if (this.selectedSlider === LEFT_SLIDER) {
-        this.drawSlider({ x, y, height, isEven, isDragging: true });
+        this.drawSlider({ ...bar, isDragging: true });
       } else if (this.selectedSlider === RIGHT_SLIDER) {
-        this.drawSlider({ x: x + width, y, height, isEven, isDragging: true });
+        this.drawSlider({ ...bar, x: x + width, isEven, isDragging: true });
       }
     }
   }
