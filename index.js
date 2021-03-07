@@ -11,7 +11,9 @@ const data = [
     title: "milestone 1",
     start: addDuration(startOfDay(new Date()), { days: 1 }),
     end: addDuration(startOfDay(new Date()), { days: 2 }),
-    dependencies: [],
+    dependencies: {
+      "m2": "start-to-start"
+    },
     completed: 0.6,
   },
 
@@ -20,7 +22,10 @@ const data = [
     title: "milestone 2",
     start: addDuration(startOfDay(new Date()), { days: -1 }),
     end: addDuration(startOfDay(new Date()), { days: 1 }),
-    dependencies: [],
+    dependencies: {
+        "m3": "end-to-start",
+      "m4": "end-to-end"
+    },
     completed: 0,
   },
 

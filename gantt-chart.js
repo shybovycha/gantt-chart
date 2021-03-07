@@ -552,6 +552,76 @@ export class GanttChart extends EventTarget {
     this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
   }
 
+  drawDependencyConnections(bar) {
+    const CONNECTION_OFFSET = 10 * SCALE_FACTOR;
+
+    for (let [ id, connectionType ] of Object.entries(bar.dependencies)) {
+      const dependency = this.bars.find(other => other.id === id);
+
+      if (!dependency) {
+        // dependency does not exist
+        continue;
+      }
+
+      if (connectionType === "start-to-start") {
+        this.ctx.strokeStyle = "red";
+        this.ctx.lineWidth = 2;
+
+        const p0 = [ bar.x, bar.y + bar.height / 2 ];
+
+        const pa = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, bar.y + bar.height / 2 ];
+        const pb = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, dependency.y + dependency.height / 2 ];
+
+        const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0[0], p0[1]);
+        this.ctx.lineTo(pa[0], pa[1]);
+        this.ctx.lineTo(pb[0], pb[1]);
+        this.ctx.lineTo(p1[0], p1[1]);
+        this.ctx.stroke();
+      } else if (connectionType === "end-to-end") {
+        this.ctx.strokeStyle = "red";
+        this.ctx.lineWidth = 2;
+
+        const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
+
+        const pa = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, bar.y + bar.height / 2 ];
+        const pb = [ pa[0], dependency.y + dependency.height / 2 ];
+
+        const p1 = [ dependency.x + dependency.width, dependency.y + dependency.height / 2 ];
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0[0], p0[1]);
+        this.ctx.lineTo(pa[0] - (CONNECTION_OFFSET / 2), pa[1]);
+        this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
+        this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
+        this.ctx.quadraticCurveTo(pb[0], pb[1], p1[0] + (CONNECTION_OFFSET / 2), p1[1]);
+        this.ctx.lineTo(p1[0], p1[1]);
+        this.ctx.stroke();
+      } else if (connectionType === "end-to-start") {
+        // this.ctx.strokeStyle = "red";
+        // this.ctx.lineWidth = 2;
+
+        // const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
+
+        // const pa = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, bar.y + bar.height / 2 ];
+        // const pb = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, dependency.y + dependency.height / 2 ];
+
+        // const p1 = [ dependency.x + dependency.width, dependency.y + dependency.height / 2 ];
+
+        // this.ctx.beginPath();
+        // this.ctx.moveTo(p0[0], p0[1]);
+        // this.ctx.lineTo(pa[0], pa[1]);
+        // this.ctx.lineTo(pb[0], pb[1]);
+        // this.ctx.lineTo(p1[0], p1[1]);
+        // this.ctx.stroke();
+      } else {
+        // unknown connection type
+      }
+    }
+  }
+
   drawMilestone(bar, isEven) {
     const {
       x,
@@ -560,6 +630,8 @@ export class GanttChart extends EventTarget {
       leftSliderSelected,
       rightSliderSelected
     } = bar;
+
+    this.drawDependencyConnections(bar);
 
     if (!this.isMouseDragging || this.selectedBar !== bar) {
       this.drawMilestoneBar({ ...bar, isSelected: isSelected || leftSliderSelected || rightSliderSelected, isEven, isDragging: false });
