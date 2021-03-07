@@ -623,22 +623,32 @@ export class GanttChart extends EventTarget {
         this.ctx.closePath();
         this.ctx.fill();
       } else if (connectionType === "end-to-start") {
-        // this.ctx.strokeStyle = "red";
-        // this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = "red";
+        this.ctx.fillStyle = "red";
+        this.ctx.lineWidth = 2;
 
-        // const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
+        const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
 
-        // const pa = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, bar.y + bar.height / 2 ];
-        // const pb = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, dependency.y + dependency.height / 2 ];
+        const dx = Math.abs(bar.x + bar.width - dependency.x);
+        const dy = Math.abs(bar.y + (bar.height / 2) - (dependency.y + (dependency.height / 2)));
 
-        // const p1 = [ dependency.x + dependency.width, dependency.y + dependency.height / 2 ];
+        const pa = [ bar.x + bar.width + (dx / 2), bar.y + (bar.height / 2) + (dy / 3) ];
+        const pb = [ dependency.x - (dx / 2), dependency.y + (dependency.height / 2) - (dy / 3) ];
 
-        // this.ctx.beginPath();
-        // this.ctx.moveTo(p0[0], p0[1]);
-        // this.ctx.lineTo(pa[0], pa[1]);
-        // this.ctx.lineTo(pb[0], pb[1]);
-        // this.ctx.lineTo(p1[0], p1[1]);
-        // this.ctx.stroke();
+        const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0[0], p0[1]);
+        this.ctx.bezierCurveTo(pa[0], pa[1], pb[0], pb[1], p1[0], p1[1]);
+        this.ctx.stroke();
+
+        // arrow
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1[0], p1[1]);
+        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
+        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+        this.ctx.closePath();
+        this.ctx.fill();
       } else {
         // unknown connection type
       }
