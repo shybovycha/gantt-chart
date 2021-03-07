@@ -555,6 +555,9 @@ export class GanttChart extends EventTarget {
   drawDependencyConnections(bar) {
     const CONNECTION_OFFSET = 10 * SCALE_FACTOR;
 
+    const CONNECTION_ARROW_WIDTH = (CONNECTION_OFFSET / 2);
+    const CONNECTION_ARROW_HEIGHT = (CONNECTION_OFFSET / 3);
+
     for (let [ id, connectionType ] of Object.entries(bar.dependencies)) {
       const dependency = this.bars.find(other => other.id === id);
 
@@ -565,6 +568,7 @@ export class GanttChart extends EventTarget {
 
       if (connectionType === "start-to-start") {
         this.ctx.strokeStyle = "red";
+        this.ctx.fillStyle = "red";
         this.ctx.lineWidth = 2;
 
         const p0 = [ bar.x, bar.y + bar.height / 2 ];
@@ -582,8 +586,17 @@ export class GanttChart extends EventTarget {
         this.ctx.quadraticCurveTo(pb[0], pb[1], p1[0] - (CONNECTION_OFFSET / 2), p1[1]);
         this.ctx.lineTo(p1[0], p1[1]);
         this.ctx.stroke();
+
+        // arrow
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1[0], p1[1]);
+        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
+        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+        this.ctx.closePath();
+        this.ctx.fill();
       } else if (connectionType === "end-to-end") {
         this.ctx.strokeStyle = "red";
+        this.ctx.fillStyle = "red";
         this.ctx.lineWidth = 2;
 
         const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
@@ -601,6 +614,14 @@ export class GanttChart extends EventTarget {
         this.ctx.quadraticCurveTo(pb[0], pb[1], p1[0] + (CONNECTION_OFFSET / 2), p1[1]);
         this.ctx.lineTo(p1[0], p1[1]);
         this.ctx.stroke();
+
+        // arrow
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1[0], p1[1]);
+        this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
+        this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+        this.ctx.closePath();
+        this.ctx.fill();
       } else if (connectionType === "end-to-start") {
         // this.ctx.strokeStyle = "red";
         // this.ctx.lineWidth = 2;
