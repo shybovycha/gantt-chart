@@ -593,7 +593,7 @@ export class GanttChart extends EventTarget {
         this.ctx.lineTo(pa[0] + (CONNECTION_OFFSET / 2), pa[1]);
         this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
         this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
-        this.ctx.quadraticCurveTo(pb[0], pb[1], p1[0] - (CONNECTION_OFFSET / 2), p1[1]);
+        this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] + (CONNECTION_OFFSET / 2), p1[1]);
         this.ctx.lineTo(p1[0], p1[1]);
         this.ctx.stroke();
 
@@ -621,7 +621,7 @@ export class GanttChart extends EventTarget {
         this.ctx.lineTo(pa[0] - (CONNECTION_OFFSET / 2), pa[1]);
         this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
         this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
-        this.ctx.quadraticCurveTo(pb[0], pb[1], p1[0] + (CONNECTION_OFFSET / 2), p1[1]);
+        this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] - (CONNECTION_OFFSET / 2), p1[1]);
         this.ctx.lineTo(p1[0], p1[1]);
         this.ctx.stroke();
 
