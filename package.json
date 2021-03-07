@@ -15,7 +15,7 @@
   "author": "Artem Shubovych <shybovycha@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "parcel-bundler": "^1.12.4"
+    "parcel": "^2.0.0-beta.1"
   },
   "dependencies": {
     "date-fns": "^2.19.0"
