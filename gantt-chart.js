@@ -274,10 +274,12 @@ export class GanttChart extends EventTarget {
       const from = this.barToEventDetail(this.initialBar);
       const to = this.barToEventDetail(this.selectedBar);
 
-      if (this.selectedSlider) {
-        this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_RESIZED, { detail: { from, to } }));
-      } else {
-        this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_MOVED, { detail: { from, to } }));
+      if (this.initialBar.x !== this.selectedBar.x || this.initialBar.width != this.selectedBar.width) {
+        if (this.selectedSlider) {
+          this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_RESIZED, { detail: { from, to } }));
+        } else {
+          this.dispatchEvent(new CustomEvent(EVENT_TYPE.MILESTONE_MOVED, { detail: { from, to } }));
+        }
       }
 
       {
