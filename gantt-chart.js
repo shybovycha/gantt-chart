@@ -1,6 +1,7 @@
 import {
   addMilliseconds,
-  // startOfDay,
+  getDayOfYear,
+  startOfDay,
   format as formatDate,
   min as minDate,
   max as maxDate
@@ -315,7 +316,6 @@ export class GanttChart extends EventTarget {
       this.minStart = addMilliseconds(this.minStart, -deltaTime);
       this.maxEnd = addMilliseconds(this.maxEnd, -deltaTime);
 
-      this.initializeColumns();
       this.initializeBars();
 
       this.initialMousePosition = { x: mouseX, y: mouseY };
@@ -414,50 +414,53 @@ export class GanttChart extends EventTarget {
   }
 
   drawColumn(index) {
-    if (index % 2 === 0) {
+    const columnDate = addMilliseconds(startOfDay(this.minStart), index * this.columnDuration);
+
+    if (getDayOfYear(columnDate) % 2 === 0) {
       this.ctx.fillStyle = COLORS.scale.bar.even;
     } else {
       this.ctx.fillStyle = COLORS.scale.bar.odd;
     }
 
-    this.ctx.fillRect(index * this.columnWidth, 0, this.columnWidth, this.canvasHeight);
+    const x = this.scaleX(columnDate);
+    const width = this.columnWidth;
+
+    this.ctx.fillRect(x, 0, this.columnWidth, this.canvasHeight);
 
     const headerHeight = FONTS.scale.column.title.size * 1.5;
 
     this.ctx.fillStyle = COLORS.scale.header.background;
-    this.ctx.fillRect(index * this.columnWidth, 0, this.columnWidth, headerHeight);
+    this.ctx.fillRect(x, 0, this.columnWidth, headerHeight);
 
     this.ctx.lineWidth = HEADER_BORDER_WIDTH;
     this.ctx.strokeStyle = COLORS.scale.header.border;
 
     this.ctx.beginPath();
-    this.ctx.moveTo(index * this.columnWidth, 0);
-    this.ctx.lineTo(index * this.columnWidth, headerHeight);
+    this.ctx.moveTo(x, 0);
+    this.ctx.lineTo(x, headerHeight);
     this.ctx.closePath();
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo(index * this.columnWidth, headerHeight);
-    this.ctx.lineTo((index + 1) * this.columnWidth, headerHeight);
+    this.ctx.moveTo(x, headerHeight);
+    this.ctx.lineTo(x + width, headerHeight);
     this.ctx.closePath();
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo((index + 1) * this.columnWidth, headerHeight);
-    this.ctx.lineTo((index + 1) * this.columnWidth, 0);
+    this.ctx.moveTo(x + width, headerHeight);
+    this.ctx.lineTo(x + width, 0);
     this.ctx.closePath();
     this.ctx.stroke();
 
     this.ctx.fillStyle = FONTS.scale.column.title.color;
     this.ctx.font = `${FONTS.scale.column.title.size}px ${FONTS.scale.column.title.font}`;
 
-    const columnDate = addMilliseconds(this.minStart, index * this.columnDuration);
-
     const columnLabel = formatDate(columnDate, "dd/MM/yy");
 
     const labelWidth = this.ctx.measureText(columnLabel).width;
 
-    this.ctx.fillText(columnLabel, (index * this.columnWidth) + ((this.columnWidth - labelWidth) / 2), DEFAULT_FONT_SIZE);
+    this.ctx.fillText(columnLabel, x + ((this.columnWidth - labelWidth) / 2), DEFAULT_FONT_SIZE);
   }
 
   drawSlider({ x, y, height, isEven, isDragging }) {
@@ -578,7 +581,7 @@ export class GanttChart extends EventTarget {
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
     // draw background columns
-    for (let i = 0; i < this.overallColumns; i++) {
+    for (let i = 0; i < this.overallColumns + 1; i++) {
       this.drawColumn(i);
     }
 
