@@ -153,7 +153,7 @@ export class GanttChart extends EventTarget {
   constructor(parentElt, milestones) {
     super();
 
-    this.milestones = milestones;
+    this.milestones = new Map(milestones.map(milestone => [ milestone.id, milestone ]));
 
     this.initializeCanvas(parentElt);
 
@@ -174,7 +174,7 @@ export class GanttChart extends EventTarget {
     this.canvasWidth = this.canvas.outerWidth || DEFAULT_WIDTH;
     this.canvasHeight =
       this.canvas.outerHeight ||
-      HEADER_HEIGHT + (this.milestones.length * (DEFAULT_ROW_HEIGHT + (DEFAULT_ROW_PADDING * 2)));
+      HEADER_HEIGHT + (this.milestones.size * (DEFAULT_ROW_HEIGHT + (DEFAULT_ROW_PADDING * 2)));
 
     this.canvas.style.width = `${this.canvasWidth / SCALE_FACTOR}px`;
     this.canvas.style.height = `${this.canvasHeight / SCALE_FACTOR}px`;
@@ -188,8 +188,10 @@ export class GanttChart extends EventTarget {
   initializeScale() {
     // create header / scale
     // find the shortest and the longest milestones
-    this.minStart = minDate(this.milestones.map(({ start }) => start));
-    this.maxEnd = maxDate(this.milestones.map(({ end }) => end));
+    const dates = Array.from(this.milestones.values()).flatMap(({ start, end }) => [ start, end ]);
+
+    this.minStart = minDate(dates);
+    this.maxEnd = maxDate(dates);
 
     this.overallDuration = this.maxEnd.getTime() - this.minStart.getTime();
   }
@@ -207,7 +209,7 @@ export class GanttChart extends EventTarget {
 
     let currentRow = 0;
 
-    for (let { title, start, end, id, completed } of this.milestones) {
+    for (let { title, start, end, id, ...rest } of this.milestones.values()) {
       const x = this.scaleX(start);
       const y =
         HEADER_HEIGHT +
@@ -217,7 +219,7 @@ export class GanttChart extends EventTarget {
       const width = this.scaleX(end) - x;
       const height = DEFAULT_ROW_HEIGHT;
 
-      const bar = { x, y, width, height, id, title, completed };
+      const bar = { x, y, width, height, title, id, ...rest };
       this.bars.push(bar);
     }
   }
@@ -230,12 +232,11 @@ export class GanttChart extends EventTarget {
     this.initialBar = null;
   }
 
-  barToEventDetail({ x, width, title, id }) {
+  barToEventDetail({ x, width, id }) {
     return {
+      ...this.milestones.get(id),
       start: new Date(this.scaleDate(x)),
       end: new Date(this.scaleDate(x + width)),
-      title,
-      id
     };
   }
 
@@ -283,7 +284,7 @@ export class GanttChart extends EventTarget {
       }
 
       {
-        const milestone = this.milestones.find(({ id }) => id === this.selectedBar.id);
+        const milestone = this.milestones.get(this.selectedBar.id);
 
         milestone.start = new Date(this.scaleDate(this.selectedBar.x));
         milestone.end = new Date(this.scaleDate(this.selectedBar.x + this.selectedBar.width));
