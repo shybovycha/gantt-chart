@@ -26,25 +26,21 @@ const COLORS = {
         dragging: "rgba(112, 162, 236, 0.6)",
         draggingBorder: "rgba(61, 111, 185, 1)", // darkened, 20%
         default: "rgba(112, 162, 236, 1)",
-        progress: "rgba(61, 111, 185, 1)" // darkened, 30%
+        progress: "rgba(61, 111, 185, 1)", // darkened, 30%
+        draggingSlider: "rgba(87, 137, 211, 1)",
+        highlightedSlider: "rgba(87, 137, 211, 1)"
       },
       even: {
-        highlighted: "rgba(93, 238, 166, 0.8)",
-        dragging: "rgba(93, 238, 166, 0.6)",
-        draggingBorder: "rgba(42, 187, 115, 0.2)", // darkened, 20%
-        default: "rgba(93, 238, 166, 1)",
-        progress: "rgba(17, 162, 90, 1)"  // darkened, 30%
+        highlighted: "rgba(111, 237, 124, 0.8)",
+        dragging: "rgba(111, 237, 124, 0.6)",
+        draggingBorder: "rgba(60, 186, 73, 1)", // darkened, 20%
+        default: "rgba(111, 237, 124, 1)",
+        progress: "rgba(35, 161, 48, 1)", // darkened, 30%
+        draggingSlider: "rgba(42, 187, 115, 1)",
+        highlightedSlider: "rgba(42, 187, 115, 1)"
       }
     },
     slider: {
-      odd: {
-        dragging: "rgba(87, 137, 211, 1)",
-        highlighted: "rgba(61, 111, 185, 1)"
-      },
-      even: {
-        dragging: "rgba(42, 187, 115, 1)",
-        highlighted: "rgba(17, 162, 90, 1)"
-      },
       symbol: "rgba(0, 0, 0, 1.0)"
     }
   },
@@ -481,15 +477,15 @@ export class GanttChart extends EventTarget {
   drawSlider({ x, y, height, isEven, isDragging }) {
     if (isDragging) {
       if (isEven) {
-        this.ctx.fillStyle = COLORS.milestone.slider.even.dragging;
+        this.ctx.fillStyle = COLORS.milestone.bar.even.draggingSlider;
       } else {
-        this.ctx.fillStyle = COLORS.milestone.slider.odd.dragging;
+        this.ctx.fillStyle = COLORS.milestone.bar.odd.draggingSlider;
       }
     } else {
       if (isEven) {
-        this.ctx.fillStyle = COLORS.milestone.slider.even.highlighted;
+        this.ctx.fillStyle = COLORS.milestone.bar.even.highlightedSlider;
       } else {
-        this.ctx.fillStyle = COLORS.milestone.slider.odd.highlighted;
+        this.ctx.fillStyle = COLORS.milestone.bar.odd.highlightedSlider;
       }
     }
 
@@ -568,7 +564,7 @@ export class GanttChart extends EventTarget {
       this.drawMilestoneBar({ ...bar, isSelected: isSelected || leftSliderSelected || rightSliderSelected, isEven, isDragging: false });
 
       if (leftSliderSelected) {
-        this.drawSlider({ ...bar, isDragging: false });
+        this.drawSlider({ ...bar, isEven, isDragging: false });
       } else if (rightSliderSelected) {
         this.drawSlider({ ...bar, x: x + width, isEven, isDragging: false });
       }
@@ -578,7 +574,7 @@ export class GanttChart extends EventTarget {
       if (!this.selectedSlider) {
         this.drawMilestoneBar({ ...bar, isEven, isDragging: true });
       } else if (this.selectedSlider === LEFT_SLIDER) {
-        this.drawSlider({ ...bar, isDragging: true });
+        this.drawSlider({ ...bar, isEven, isDragging: true });
       } else if (this.selectedSlider === RIGHT_SLIDER) {
         this.drawSlider({ ...bar, x: x + width, isEven, isDragging: true });
       }
