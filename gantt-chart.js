@@ -255,7 +255,7 @@ export class GanttChart extends EventTarget {
    * @param {number} factor zooming factor
    */
   zoom(factor) {
-    if (this.columnWidth <= MIN_COLUMN_WIDTH) {
+    if (factor < 1 && this.columnWidth <= MIN_COLUMN_WIDTH) {
       console.error("Can not zoom out further");
       return;
     }
