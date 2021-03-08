@@ -12,3 +12,7 @@ $ yarn build
 ```
 
 Then, open `example.html` file in your browser.
+
+## Demo
+
+You can see the example (`example.html`) live, on [my blog](https://shybovycha.github.io/2021/03/04/gantt-chart-part3.html).
