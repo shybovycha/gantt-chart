@@ -6,22 +6,25 @@
   <title>Gantt chart demo</title>
 </head>
 <body>
-  <div id="chart">
+  <div class="gantt-chart-container">
     <div id="controls">
       <button id="zoom-out">-</button>
       <button id="zoom-in">+</button>
     </div>
+
+    <div id="gantt-chart"></div>
   </div>
 
   <style>
     html, body { height: 100%; margin: 0; padding: 0; }
 
-    #chart { display: grid; grid-template-rows: 10% auto 10%; grid-template-columns: 10% auto 10%; height: 100%; justify-content: center; align-content: center; }
+    #gantt-chart { display: grid; grid-template-rows: 10% auto 10%; grid-template-columns: 10% auto 10%; height: 100%; justify-content: center; align-content: center; }
 
-    #chart canvas { grid-column: 2 / 3; grid-row: 2 / 3; }
+    #gantt-chart canvas { grid-column: 2 / 3; grid-row: 2 / 3; }
 
-    #chart #controls { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; height: 1.2em; justify-content: center; align-content: center; }
+    .gantt-chart-container #controls { grid-column: 2 / 3; grid-row: 1 / 3; display: flex; height: 1.2em; justify-content: center; align-content: center; }
   </style>
+
   <script src="./dist/gantt-chart.bundle.js"></script>
 </body>
 </html>

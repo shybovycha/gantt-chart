@@ -48,7 +48,7 @@ const data = [
   },
 ];
 
-const parentElt = document.querySelector('#chart');
+const parentElt = document.querySelector('#gantt-chart');
 
 const chart = new GanttChart(parentElt, data);
 
