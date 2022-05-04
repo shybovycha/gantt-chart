@@ -11,9 +11,7 @@ const data = [
     title: "milestone 1",
     start: addDuration(startOfDay(new Date()), { days: 1 }),
     end: addDuration(startOfDay(new Date()), { days: 2 }),
-    dependencies: {
-      "m2": "start-to-start"
-    },
+    dependencies: ["m2"],
     completed: 0.6,
   },
 
@@ -22,10 +20,7 @@ const data = [
     title: "milestone 2",
     start: addDuration(startOfDay(new Date()), { days: -1 }),
     end: addDuration(startOfDay(new Date()), { days: 1 }),
-    dependencies: {
-        "m3": "end-to-start",
-      "m4": "end-to-end"
-    },
+    dependencies: ["m3", "m4"],
     completed: 0,
   },
 
@@ -41,6 +36,24 @@ const data = [
   {
     id: "m4",
     title: "milestone 4",
+    start: addDuration(startOfDay(new Date()), { days: 3 }),
+    end: addDuration(startOfDay(new Date()), { days: 6 }),
+    dependencies: [],
+    completed: 0.2,
+  },
+
+  {
+    id: "m5",
+    title: "milestone 5",
+    start: addDuration(startOfDay(new Date()), { days: 3 }),
+    end: addDuration(startOfDay(new Date()), { days: 6 }),
+    dependencies: [],
+    completed: 0.2,
+  },
+
+  {
+    id: "m6",
+    title: "milestone 6",
     start: addDuration(startOfDay(new Date()), { days: 3 }),
     end: addDuration(startOfDay(new Date()), { days: 6 }),
     dependencies: [],

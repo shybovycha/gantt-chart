@@ -464,66 +464,6 @@ export class GanttChart extends EventTarget {
     this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
   }
 
-  drawStartToStartConnection(bar, dependency) {
-    this.ctx.strokeStyle = COLORS.milestone.connection.startToStart.line;
-    this.ctx.fillStyle = COLORS.milestone.connection.startToStart.line;
-    this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
-
-    const p0 = [ bar.x, bar.y + bar.height / 2 ];
-
-    const pa = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, bar.y + bar.height / 2 ];
-    const pb = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, dependency.y + dependency.height / 2 ];
-
-    const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
-
-    this.ctx.beginPath();
-    this.ctx.moveTo(p0[0], p0[1]);
-    this.ctx.lineTo(pa[0] + (CONNECTION_OFFSET / 2), pa[1]);
-    this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
-    this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
-    this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] + (CONNECTION_OFFSET / 2), p1[1]);
-    this.ctx.lineTo(p1[0], p1[1]);
-    this.ctx.stroke();
-
-    // arrow
-    this.ctx.beginPath();
-    this.ctx.moveTo(p1[0], p1[1]);
-    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
-    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
-    this.ctx.closePath();
-    this.ctx.fill();
-  }
-
-  drawEndToEndConnection(bar, dependency) {
-    this.ctx.strokeStyle = COLORS.milestone.connection.endToEnd.line;
-    this.ctx.fillStyle = COLORS.milestone.connection.endToEnd.line;
-    this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
-
-    const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
-
-    const pa = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, bar.y + bar.height / 2 ];
-    const pb = [ pa[0], dependency.y + dependency.height / 2 ];
-
-    const p1 = [ dependency.x + dependency.width, dependency.y + dependency.height / 2 ];
-
-    this.ctx.beginPath();
-    this.ctx.moveTo(p0[0], p0[1]);
-    this.ctx.lineTo(pa[0] - (CONNECTION_OFFSET / 2), pa[1]);
-    this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
-    this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
-    this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] - (CONNECTION_OFFSET / 2), p1[1]);
-    this.ctx.lineTo(p1[0], p1[1]);
-    this.ctx.stroke();
-
-    // arrow
-    this.ctx.beginPath();
-    this.ctx.moveTo(p1[0], p1[1]);
-    this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
-    this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
-    this.ctx.closePath();
-    this.ctx.fill();
-  }
-
   drawEndToStartConnection(bar, dependency) {
     this.ctx.strokeStyle = COLORS.milestone.connection.endToStart.line;
     this.ctx.fillStyle = COLORS.milestone.connection.endToStart.line;
@@ -557,7 +497,7 @@ export class GanttChart extends EventTarget {
   }
 
   drawDependencyConnections(bar) {
-    for (let [ id, connectionType ] of Object.entries(bar.dependencies)) {
+    for (let id of bar.dependencies) {
       const dependency = this.bars.find(other => other.id === id);
 
       if (!dependency) {
@@ -565,15 +505,7 @@ export class GanttChart extends EventTarget {
         continue;
       }
 
-      if (connectionType === "start-to-start") {
-        this.drawStartToStartConnection(bar, dependency);
-      } else if (connectionType === "end-to-end") {
-        this.drawEndToEndConnection(bar, dependency);
-      } else if (connectionType === "end-to-start") {
-        this.drawEndToStartConnection(bar, dependency);
-      } else {
-        throw new Error(`Unknown connection "${connectionType}" between bars ${id} and ${dependency.id}`);
-      }
+      this.drawEndToStartConnection(bar, dependency);
     }
   }
 
