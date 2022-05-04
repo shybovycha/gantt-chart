@@ -537,18 +537,21 @@ export class GanttChart extends EventTarget {
     const pa = [ bar.x + bar.width + (dx / 2), bar.y + (bar.height / 2) + (dy / 3) ];
     const pb = [ dependency.x - (dx / 2), dependency.y + (dependency.height / 2) - (dy / 3) ];
 
-    const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
+    const p1 = [ dependency.x - CONNECTION_ARROW_WIDTH, dependency.y + dependency.height / 2 ];
+
+    const p2 = [ dependency.x, dependency.y + dependency.height / 2 ];
 
     this.ctx.beginPath();
     this.ctx.moveTo(p0[0], p0[1]);
     this.ctx.bezierCurveTo(pa[0], pa[1], pb[0], pb[1], p1[0], p1[1]);
+    this.ctx.lineTo(p1[0], p1[1]);
     this.ctx.stroke();
 
     // arrow
     this.ctx.beginPath();
-    this.ctx.moveTo(p1[0], p1[1]);
-    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
-    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+    this.ctx.moveTo(p2[0], p2[1]);
+    this.ctx.lineTo(p2[0] - CONNECTION_ARROW_WIDTH, p2[1] - CONNECTION_ARROW_HEIGHT);
+    this.ctx.lineTo(p2[0] - CONNECTION_ARROW_WIDTH, p2[1] + CONNECTION_ARROW_HEIGHT);
     this.ctx.closePath();
     this.ctx.fill();
   }
