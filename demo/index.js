@@ -3,7 +3,7 @@ import {
   add as addDuration
 } from "date-fns";
 
-import { GanttChart } from '../src/gantt-chart';
+import { GanttChart } from '../src/GanttChart';
 
 const data = [
   {

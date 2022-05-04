@@ -7,164 +7,30 @@ import {
   max as maxDate
 } from "date-fns";
 
-const SCALE_FACTOR = 2;
+import {
+  SCALE_FACTOR,
+  DEFAULT_ROW_HEIGHT,
+  DEFAULT_WIDTH,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_ROW_PADDING,
+  DEFAULT_RADIUS,
+  SLIDER_WIDTH,
+  HEADER_BORDER_WIDTH,
+  TODAY_MARKER_WIDTH,
+  CONNECTION_OFFSET,
+  CONNECTION_ARROW_WIDTH,
+  CONNECTION_ARROW_HEIGHT,
+  CONNECTION_LINE_WIDTH,
+  MIN_COLUMN_WIDTH,
+  COLORS,
+  FONTS,
+  HEADER_HEIGHT,
+  RIGHT_SLIDER,
+  LEFT_SLIDER,
+  EVENT_TYPE
+} from './configuration';
 
-const DEFAULT_ROW_HEIGHT = 40 * SCALE_FACTOR;
-const DEFAULT_WIDTH = 1200 * SCALE_FACTOR;
-const DEFAULT_FONT_SIZE = 12 * SCALE_FACTOR;
-const DEFAULT_ROW_PADDING = 10 * SCALE_FACTOR;
-const DEFAULT_RADIUS = 5 * SCALE_FACTOR;
-const SLIDER_WIDTH = 10 * SCALE_FACTOR;
-const HEADER_BORDER_WIDTH = 1.5 * SCALE_FACTOR;
-const TODAY_MARKER_WIDTH = 1.5 * SCALE_FACTOR;
-const CONNECTION_OFFSET = 10 * SCALE_FACTOR;
-const CONNECTION_ARROW_WIDTH = (CONNECTION_OFFSET / 2);
-const CONNECTION_ARROW_HEIGHT = (CONNECTION_OFFSET / 3);
-const CONNECTION_LINE_WIDTH = 2;
-
-const MIN_COLUMN_WIDTH = 40 * SCALE_FACTOR;
-
-const COLORS = {
-  milestone: {
-    bar: {
-      odd: {
-        highlighted: "rgba(112, 162, 236, 0.8)",
-        dragging: "rgba(112, 162, 236, 0.6)",
-        draggingBorder: "rgba(61, 111, 185, 1)", // darkened, 20%
-        default: "rgba(112, 162, 236, 1)",
-        progress: "rgba(61, 111, 185, 1)", // darkened, 30%
-        draggingSlider: "rgba(87, 137, 211, 1)",
-        highlightedSlider: "rgba(87, 137, 211, 1)"
-      },
-      even: {
-        highlighted: "rgba(111, 237, 124, 0.8)",
-        dragging: "rgba(111, 237, 124, 0.6)",
-        draggingBorder: "rgba(60, 186, 73, 1)", // darkened, 20%
-        default: "rgba(111, 237, 124, 1)",
-        progress: "rgba(35, 161, 48, 1)", // darkened, 30%
-        draggingSlider: "rgba(42, 187, 115, 1)",
-        highlightedSlider: "rgba(42, 187, 115, 1)"
-      }
-    },
-    slider: {
-      symbol: "rgba(0, 0, 0, 1.0)"
-    },
-    connection: {
-      endToEnd: {
-        line: "rgba(100, 100, 100, 1)"
-      },
-      endToStart: {
-        line: "rgba(100, 100, 100, 1)"
-      },
-      startToStart: {
-        line: "rgba(100, 100, 100, 1)"
-      },
-    }
-  },
-  scale: {
-    bar: {
-      odd: "rgba(255, 255, 255, 0.9)",
-      even: "rgba(220, 225, 220, 0.4)"
-    },
-    marker: {
-      today: "rgba(238, 156, 93, 1)"
-    },
-    header: {
-      background: "rgba(255, 255, 255, 1)",
-      border: "rgba(220, 225, 220, 0.4)"
-    }
-  }
-};
-
-const FONTS = {
-  scale: {
-    column: {
-      title: {
-        color: "rgba(0, 0, 0, 1)",
-        size: 12 * SCALE_FACTOR,
-        font: "Arial"
-      }
-    }
-  },
-  milestone: {
-    label: {
-      color: "rgba(0, 0, 0, 1)",
-      size: 12 * SCALE_FACTOR,
-      font: "Arial"
-    }
-  }
-};
-
-const HEADER_HEIGHT = FONTS.scale.column.title.size * 1.5;
-
-const RIGHT_SLIDER = Symbol("right");
-const LEFT_SLIDER = Symbol("left");
-
-const EVENT_TYPE = {
-  MILESTONE_MOVED: 'milestonemove',
-  MILESTONE_RESIZED: 'milestoneresize',
-};
-
-const roundRect = (ctx, x, y, width, height, radius, fill, stroke) => {
-  if (typeof stroke === "undefined") {
-    stroke = false;
-  }
-
-  if (typeof radius === "undefined") {
-    radius = 0;
-  }
-
-  if (typeof radius === "number") {
-    radius = {
-      topRight: radius,
-      topLeft: radius,
-      bottomRight: radius,
-      bottomLeft: radius,
-    };
-  } else {
-    const defaultRadius = {
-      topLeft: 0,
-      topRight: 0,
-      bottomRight: 0,
-      bottomLeft: 0,
-    };
-
-    for (let side of defaultRadius) {
-      radius[side] = radius[side] || defaultRadius[side];
-    }
-  }
-
-  ctx.beginPath();
-
-  ctx.moveTo(x + radius.topLeft, y);
-
-  ctx.lineTo(x + width - radius.topRight, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.topRight);
-
-  ctx.lineTo(x + width, y + height - radius.bottomRight);
-  ctx.quadraticCurveTo(
-    x + width,
-    y + height,
-    x + width - radius.bottomRight,
-    y + height
-  );
-
-  ctx.lineTo(x + radius.bottomLeft, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bottomLeft);
-
-  ctx.lineTo(x, y + radius.topLeft);
-  ctx.quadraticCurveTo(x, y, x + radius.topLeft, y);
-
-  ctx.closePath();
-
-  if (fill) {
-    ctx.fill();
-  }
-
-  if (stroke) {
-    ctx.stroke();
-  }
-};
+import { roundRect } from './roundRect';
 
 export class GanttChart extends EventTarget {
   constructor(parentElt, milestones) {
@@ -346,6 +212,27 @@ export class GanttChart extends EventTarget {
     this.isMouseDragging = false;
   }
 
+  isMouseOverRightResizeHandle({ mouseX, mouseY }, { x: barX, y: barY, width: barWidth, height: barHeight }) {
+    return mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
+        mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
+        mouseY >= barY &&
+        mouseY <= barY + barHeight;
+  }
+
+  isMouseOverLeftResizeHandle({ mouseX, mouseY }, { x: barX, y: barY, width: barWidth, height: barHeight }) {
+    return mouseX >= barX - SLIDER_WIDTH / 2 &&
+        mouseX <= barX + SLIDER_WIDTH / 2 &&
+        mouseY >= barY &&
+        mouseY <= barY + barHeight;
+  }
+
+  isMouseOverMiddleOfBar({ mouseX, mouseY }, { x: barX, y: barY, width: barWidth, height: barHeight }) {
+    return mouseX > barX + SLIDER_WIDTH / 2 &&
+        mouseX < barX + barWidth - SLIDER_WIDTH / 2 &&
+        mouseY >= barY &&
+        mouseY <= barY + barHeight;
+  }
+
   onMouseMove(evt) {
     const { layerX, layerY } = evt;
     const { offsetLeft, offsetTop } = this.canvas;
@@ -397,33 +284,18 @@ export class GanttChart extends EventTarget {
       bar.leftSliderSelected = false;
 
       if (!this.isMouseDragging) {
-        if (
-          mouseX > barX + SLIDER_WIDTH / 2 &&
-          mouseX < barX + barWidth - SLIDER_WIDTH / 2 &&
-          mouseY >= barY &&
-          mouseY <= barY + barHeight
-        ) {
+        if (this.isMouseOverMiddleOfBar({ mouseX, mouseY }, bar)) {
           bar.isSelected = true;
           selectedBarFound = bar;
           this.canvas.style.cursor = "grab";
         }
 
-        if (
-          mouseX >= barX - SLIDER_WIDTH / 2 &&
-          mouseX <= barX + SLIDER_WIDTH / 2 &&
-          mouseY >= barY &&
-          mouseY <= barY + barHeight
-        ) {
+        if (this.isMouseOverLeftResizeHandle({ mouseX, mouseY }, bar)) {
           bar.leftSliderSelected = true;
           selectedBarFound = bar;
           this.selectedSlider = LEFT_SLIDER;
           this.canvas.style.cursor = "col-resize";
-        } else if (
-          mouseX >= barX + barWidth - SLIDER_WIDTH / 2 &&
-          mouseX <= barX + barWidth + SLIDER_WIDTH / 2 &&
-          mouseY >= barY &&
-          mouseY <= barY + barHeight
-        ) {
+        } else if (this.isMouseOverRightResizeHandle({ mouseX, mouseY }, bar)) {
           bar.rightSliderSelected = true;
           selectedBarFound = bar;
           this.selectedSlider = RIGHT_SLIDER;
@@ -596,6 +468,95 @@ export class GanttChart extends EventTarget {
     this.ctx.fillText(title, (x + width / 2) - (labelWidth / 2), y + DEFAULT_FONT_SIZE / 2 + height / 2);
   }
 
+  drawStartToStartConnection(bar, dependency) {
+    this.ctx.strokeStyle = COLORS.milestone.connection.startToStart.line;
+    this.ctx.fillStyle = COLORS.milestone.connection.startToStart.line;
+    this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
+
+    const p0 = [ bar.x, bar.y + bar.height / 2 ];
+
+    const pa = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, bar.y + bar.height / 2 ];
+    const pb = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, dependency.y + dependency.height / 2 ];
+
+    const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(p0[0], p0[1]);
+    this.ctx.lineTo(pa[0] + (CONNECTION_OFFSET / 2), pa[1]);
+    this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
+    this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
+    this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] + (CONNECTION_OFFSET / 2), p1[1]);
+    this.ctx.lineTo(p1[0], p1[1]);
+    this.ctx.stroke();
+
+    // arrow
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1[0], p1[1]);
+    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
+    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+
+  drawEndToEndConnection(bar, dependency) {
+    this.ctx.strokeStyle = COLORS.milestone.connection.endToEnd.line;
+    this.ctx.fillStyle = COLORS.milestone.connection.endToEnd.line;
+    this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
+
+    const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
+
+    const pa = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, bar.y + bar.height / 2 ];
+    const pb = [ pa[0], dependency.y + dependency.height / 2 ];
+
+    const p1 = [ dependency.x + dependency.width, dependency.y + dependency.height / 2 ];
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(p0[0], p0[1]);
+    this.ctx.lineTo(pa[0] - (CONNECTION_OFFSET / 2), pa[1]);
+    this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
+    this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
+    this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] - (CONNECTION_OFFSET / 2), p1[1]);
+    this.ctx.lineTo(p1[0], p1[1]);
+    this.ctx.stroke();
+
+    // arrow
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1[0], p1[1]);
+    this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
+    this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+
+  drawEndToStartConnection(bar, dependency) {
+    this.ctx.strokeStyle = COLORS.milestone.connection.endToStart.line;
+    this.ctx.fillStyle = COLORS.milestone.connection.endToStart.line;
+    this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
+
+    const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
+
+    const dx = Math.abs(bar.x + bar.width - dependency.x);
+    const dy = Math.abs(bar.y + (bar.height / 2) - (dependency.y + (dependency.height / 2)));
+
+    const pa = [ bar.x + bar.width + (dx / 2), bar.y + (bar.height / 2) + (dy / 3) ];
+    const pb = [ dependency.x - (dx / 2), dependency.y + (dependency.height / 2) - (dy / 3) ];
+
+    const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(p0[0], p0[1]);
+    this.ctx.bezierCurveTo(pa[0], pa[1], pb[0], pb[1], p1[0], p1[1]);
+    this.ctx.stroke();
+
+    // arrow
+    this.ctx.beginPath();
+    this.ctx.moveTo(p1[0], p1[1]);
+    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
+    this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+
   drawDependencyConnections(bar) {
     for (let [ id, connectionType ] of Object.entries(bar.dependencies)) {
       const dependency = this.bars.find(other => other.id === id);
@@ -606,90 +567,13 @@ export class GanttChart extends EventTarget {
       }
 
       if (connectionType === "start-to-start") {
-        this.ctx.strokeStyle = COLORS.milestone.connection.startToStart.line;
-        this.ctx.fillStyle = COLORS.milestone.connection.startToStart.line;
-        this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
-
-        const p0 = [ bar.x, bar.y + bar.height / 2 ];
-
-        const pa = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, bar.y + bar.height / 2 ];
-        const pb = [ Math.min(bar.x, dependency.x) - CONNECTION_OFFSET, dependency.y + dependency.height / 2 ];
-
-        const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(p0[0], p0[1]);
-        this.ctx.lineTo(pa[0] + (CONNECTION_OFFSET / 2), pa[1]);
-        this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
-        this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
-        this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] + (CONNECTION_OFFSET / 2), p1[1]);
-        this.ctx.lineTo(p1[0], p1[1]);
-        this.ctx.stroke();
-
-        // arrow
-        this.ctx.beginPath();
-        this.ctx.moveTo(p1[0], p1[1]);
-        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
-        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
-        this.ctx.closePath();
-        this.ctx.fill();
+        this.drawStartToStartConnection(bar, dependency);
       } else if (connectionType === "end-to-end") {
-        this.ctx.strokeStyle = COLORS.milestone.connection.endToEnd.line;
-        this.ctx.fillStyle = COLORS.milestone.connection.endToEnd.line;
-        this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
-
-        const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
-
-        const pa = [ Math.max(bar.x + bar.width, dependency.x + dependency.width) + CONNECTION_OFFSET, bar.y + bar.height / 2 ];
-        const pb = [ pa[0], dependency.y + dependency.height / 2 ];
-
-        const p1 = [ dependency.x + dependency.width, dependency.y + dependency.height / 2 ];
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(p0[0], p0[1]);
-        this.ctx.lineTo(pa[0] - (CONNECTION_OFFSET / 2), pa[1]);
-        this.ctx.quadraticCurveTo(pa[0], pa[1], pa[0], pa[1] + (CONNECTION_OFFSET / 2));
-        this.ctx.lineTo(pb[0], pb[1] - (CONNECTION_OFFSET / 2));
-        this.ctx.quadraticCurveTo(pb[0], pb[1], pb[0] - (CONNECTION_OFFSET / 2), p1[1]);
-        this.ctx.lineTo(p1[0], p1[1]);
-        this.ctx.stroke();
-
-        // arrow
-        this.ctx.beginPath();
-        this.ctx.moveTo(p1[0], p1[1]);
-        this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
-        this.ctx.lineTo(p1[0] + CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
-        this.ctx.closePath();
-        this.ctx.fill();
+        this.drawEndToEndConnection(bar, dependency);
       } else if (connectionType === "end-to-start") {
-        this.ctx.strokeStyle = COLORS.milestone.connection.endToStart.line;
-        this.ctx.fillStyle = COLORS.milestone.connection.endToStart.line;
-        this.ctx.lineWidth = CONNECTION_LINE_WIDTH;
-
-        const p0 = [ bar.x + bar.width, bar.y + bar.height / 2 ];
-
-        const dx = Math.abs(bar.x + bar.width - dependency.x);
-        const dy = Math.abs(bar.y + (bar.height / 2) - (dependency.y + (dependency.height / 2)));
-
-        const pa = [ bar.x + bar.width + (dx / 2), bar.y + (bar.height / 2) + (dy / 3) ];
-        const pb = [ dependency.x - (dx / 2), dependency.y + (dependency.height / 2) - (dy / 3) ];
-
-        const p1 = [ dependency.x, dependency.y + dependency.height / 2 ];
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(p0[0], p0[1]);
-        this.ctx.bezierCurveTo(pa[0], pa[1], pb[0], pb[1], p1[0], p1[1]);
-        this.ctx.stroke();
-
-        // arrow
-        this.ctx.beginPath();
-        this.ctx.moveTo(p1[0], p1[1]);
-        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] - CONNECTION_ARROW_HEIGHT);
-        this.ctx.lineTo(p1[0] - CONNECTION_ARROW_WIDTH, p1[1] + CONNECTION_ARROW_HEIGHT);
-        this.ctx.closePath();
-        this.ctx.fill();
+        this.drawEndToStartConnection(bar, dependency);
       } else {
-        // unknown connection type
+        throw new Error(`Unknown connection "${connectionType}" between bars ${id} and ${dependency.id}`);
       }
     }
   }
