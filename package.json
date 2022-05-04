@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack"
+    "build": "yarn build-lib && yarn build-demo",
+    "build-lib": "esbuild src/GanttChart.js --outfile=dist/GanttChart.js --bundle --minify --target=chrome101,firefox99",
+    "build-demo": "esbuild demo/index.js --bundle --outfile=dist/index.js --minify"
   },
   "keywords": [
     "gantt",
@@ -14,8 +16,7 @@
   "author": "Artem Shubovych <shybovycha@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "webpack": "^5.72.0",
-    "webpack-cli": "^4.9.2"
+    "esbuild": "^0.14.38"
   },
   "dependencies": {
     "date-fns": "^2.19.0"
