@@ -270,10 +270,6 @@ export class GanttChart extends EventTarget {
       const bar = this.bars[i];
 
       const {
-        x: barX,
-        y: barY,
-        width: barWidth,
-        height: barHeight,
         isSelected: wasSelected,
         leftSliderSelected: wasLeftSliderSelected,
         rightSliderSelected: wasRightSliderSelected
