@@ -563,15 +563,15 @@ export class GanttChart extends EventTarget {
       this.drawColumn(i);
     }
 
+    // draw today's marker line
+    this.drawTodayMarker();
+
     // draw bars
     for (let i = 0; i < this.bars.length; i++) {
       const bar = this.bars[i];
 
       this.drawMilestone(bar, i % 2 === 0);
     }
-
-    // draw today's marker line
-    this.drawTodayMarker();
   }
 
   /**
