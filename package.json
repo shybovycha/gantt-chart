@@ -1,24 +1,26 @@
 {
-  "name": "gantt-chart-canvas",
-  "version": "2.0.0",
+  "name": "gantt-chart-grid",
+  "version": "3.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "yarn build-lib && yarn build-demo",
-    "build-lib": "esbuild src/GanttChart.js --outfile=dist/GanttChart.js --bundle --minify --target=chrome101,firefox99",
-    "build-demo": "esbuild demo/index.js --bundle --outfile=dist/index.js --minify"
+    "build-lib": "esbuild src/GanttChart.jsx --outfile=dist/GanttChart.js --bundle --target=chrome119,firefox120",
+    "build-demo": "esbuild demo/index.jsx --bundle --outfile=dist/index.js"
   },
   "keywords": [
     "gantt",
     "chart",
-    "canvas"
+    "grid"
   ],
   "author": "Artem Shubovych <shybovycha@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "esbuild": "^0.14.38"
+    "esbuild": "^0.19.7"
   },
   "dependencies": {
-    "date-fns": "^2.19.0"
+    "date-fns": "^2.19.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

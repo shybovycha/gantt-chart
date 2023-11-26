@@ -1,3 +1,6 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+
 import {
   startOfDay,
   add as addDuration
@@ -11,7 +14,7 @@ const data = [
     title: "milestone 1",
     start: addDuration(startOfDay(new Date()), { days: 1 }),
     end: addDuration(startOfDay(new Date()), { days: 2 }),
-    dependencies: ["m2"],
+    parent: "m2",
     completed: 0.6,
   },
 
@@ -20,7 +23,7 @@ const data = [
     title: "milestone 2",
     start: addDuration(startOfDay(new Date()), { days: -1 }),
     end: addDuration(startOfDay(new Date()), { days: 1 }),
-    dependencies: ["m3", "m4"],
+    parent: "m3",
     completed: 0,
   },
 
@@ -29,7 +32,7 @@ const data = [
     title: "milestone 3",
     start: addDuration(startOfDay(new Date()), { days: 4 }),
     end: addDuration(startOfDay(new Date()), { days: 5 }),
-    dependencies: [],
+    parent: null,
     completed: 0.75,
   },
 
@@ -38,7 +41,7 @@ const data = [
     title: "milestone 4",
     start: addDuration(startOfDay(new Date()), { days: 3 }),
     end: addDuration(startOfDay(new Date()), { days: 6 }),
-    dependencies: [],
+    parent: null,
     completed: 0.2,
   },
 
@@ -47,7 +50,7 @@ const data = [
     title: "milestone 5",
     start: addDuration(startOfDay(new Date()), { days: 3 }),
     end: addDuration(startOfDay(new Date()), { days: 6 }),
-    dependencies: [],
+    parent: null,
     completed: 0.2,
   },
 
@@ -56,22 +59,12 @@ const data = [
     title: "milestone 6",
     start: addDuration(startOfDay(new Date()), { days: 3 }),
     end: addDuration(startOfDay(new Date()), { days: 6 }),
-    dependencies: [],
+    parent: null,
     completed: 0.2,
   },
 ];
 
-const parentElt = document.querySelector('#gantt-chart');
+const parentElt = document.querySelector('#root');
+const root = createRoot(parentElt);
 
-const chart = new GanttChart(parentElt, data);
-
-chart.addEventListener('milestonemove', (e) => console.log('Milestone moved', e.detail));
-chart.addEventListener('milestoneresize', (e) => console.log('Milestone resized', e.detail));
-
-chart.render();
-
-const zoomOutBtn = document.querySelector('#zoom-out');
-zoomOutBtn.addEventListener('click', () => chart.zoom(0.75));
-
-const zoomInBtn = document.querySelector('#zoom-in');
-zoomInBtn.addEventListener('click', () => chart.zoom(1.25));
+root.render(<GanttChart items={data} />);
