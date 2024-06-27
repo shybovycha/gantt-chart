@@ -1,0 +1,72 @@
+.gantt {
+  display: grid;
+  grid-template: 1fr / auto 1fr;
+  grid-template-areas: "left right";
+  width: 100%;
+}
+
+.gantt .left_pane {
+  display: grid;
+  grid-area: left;
+  border-right: 1px solid #bbb;
+  grid-template: auto 1fr / 1fr;
+  grid-template-areas: "corner" "rows";
+}
+
+.gantt .left_pane .left_pane_rows {
+  display: grid;
+  grid-area: rows;
+}
+
+.gantt .left_pane .left_pane_header {
+  display: grid;
+  grid-area: corner;
+}
+
+.gantt .right_pane {
+  display: grid;
+  grid-template: auto 1fr / 1fr;
+  grid-template-areas: "scale" "rows";
+  grid-area: right;
+  overflow: auto;
+}
+
+.gantt .right_pane .right_pane_rows {
+  width: 1000px; /*temp*/
+  display: grid;
+  grid-area: rows;
+}
+
+.gantt .right_pane .right_pane_header_row {
+  display: grid;
+  grid-area: scale;
+}
+
+.gantt .right_pane .right_pane_header_row .right_pane_header {
+  display: grid;
+  align-items: center;
+  text-align: center;
+}
+
+.gantt .row {
+  height: 40px;
+  align-items: center;
+  display: grid;
+}
+
+.gantt .right_pane .row {
+  position: relative;
+}
+
+.gantt .right_pane .left_pane_row__hovered {
+  background: #c1c6e6;
+}
+
+.gantt .right_pane .row .entry {
+  background: #eeeeee;
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.5rem;
+
+  align-items: center;
+  text-align: center;
+}
