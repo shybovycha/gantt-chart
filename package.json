@@ -1,19 +1,20 @@
 {
-  "name": "react",
+  "name": "gantt-chart-react-css-grid",
   "version": "1.0.0",
-  "description": "React example starter project",
+  "description": "Gantt chart in React with CSS grid",
   "keywords": [
+    "gantt",
+    "chart",
     "react",
-    "starter"
+    "grid"
   ],
-  "main": "src/index.js",
   "dependencies": {
+    "classnames": "2.5.1",
     "loader-utils": "3.2.1",
+    "pluralize": "8.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-scripts": "5.0.1",
-    "classnames": "2.5.1",
-    "pluralize": "8.0.0"
+    "react-scripts": "5.0.1"
   },
   "devDependencies": {
     "@babel/runtime": "7.13.8",
