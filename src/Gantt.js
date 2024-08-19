@@ -20,8 +20,9 @@ const LeftPane = ({ items }) => {
   );
 };
 
-const RightPaneRow = ({ id, name, columns }) => {
+const RightPaneRow = ({ id, name, columns, start, end }) => {
   const gridTemplate = `auto / repeat(${columns}, 1fr)`;
+  const gridArea = `1 / ${start} / 1 / ${end}`;
 
   return (
     <div
@@ -30,8 +31,13 @@ const RightPaneRow = ({ id, name, columns }) => {
         gridTemplate,
       }}
     >
-      <div className={style.entry} style={{ left: 0 }}>
-        {id} {/* TODO put data in columns here */}
+      <div
+        className={style.entry}
+        style={{
+          gridArea,
+        }}
+      >
+        {id}
       </div>
     </div>
   );
