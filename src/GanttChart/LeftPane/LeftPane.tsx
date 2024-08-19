@@ -7,12 +7,13 @@ import style from "../gantt.module.css";
 
 export interface LeftPaneProps {
   items: GanttChartItemWithLevel[];
+  header?: React.Element;
 }
 
-export const LeftPane = ({ items }: LeftPaneProps) => {
+export const LeftPane = ({ items, header = <>&nbsp;</> }: LeftPaneProps) => {
   return (
     <div className={style.left_pane}>
-      <div className={style.left_pane_header}>/</div>
+      <div className={style.left_pane_header}>{header}</div>
 
       <div className={style.left_pane_rows}>
         {items.map((item) => (
