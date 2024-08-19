@@ -1,26 +1,32 @@
 {
-  "name": "gantt-chart-grid",
-  "version": "3.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "yarn build-lib && yarn build-demo",
-    "build-lib": "esbuild src/GanttChart.jsx --outfile=dist/GanttChart.js --bundle --target=chrome119,firefox120",
-    "build-demo": "esbuild demo/index.jsx --bundle --outfile=dist/index.js"
-  },
+  "name": "react",
+  "version": "1.0.0",
+  "description": "React example starter project",
   "keywords": [
-    "gantt",
-    "chart",
-    "grid"
+    "react",
+    "starter"
   ],
-  "author": "Artem Shubovych <shybovycha@gmail.com>",
-  "license": "ISC",
-  "devDependencies": {
-    "esbuild": "^0.19.7"
-  },
+  "main": "src/index.js",
   "dependencies": {
-    "date-fns": "^2.19.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  }
+    "loader-utils": "3.2.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "@babel/runtime": "7.13.8",
+    "typescript": "4.1.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }
