@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import classnames from "classnames";
 
 import style from "./gantt.module.css";
 
@@ -20,25 +21,56 @@ const LeftPane = ({ items }) => {
   );
 };
 
-const RightPaneRow = ({ id, name, columns, start, end }) => {
+const RightPaneRow = ({ id, columns, children }) => {
   const gridTemplate = `auto / repeat(${columns}, 1fr)`;
-  const gridArea = `1 / ${start} / 1 / ${end}`;
+
+  const [hover, setHover] = useState(false);
+
+  const onEnter = (e) => {
+    setHover(true);
+    console.log(e);
+  };
+
+  const onLeave = () => {
+    setHover(false);
+  };
 
   return (
     <div
-      className={style.row}
+      className={classnames(style.row, {
+        [style.left_pane_row__hovered]: hover,
+      })}
       style={{
         gridTemplate,
       }}
+      onDragEnter={onEnter}
+      onDragLeave={onLeave}
     >
-      <div
-        className={style.entry}
-        style={{
-          gridArea,
-        }}
-      >
-        {id}
-      </div>
+      {children}
+    </div>
+  );
+};
+
+const RightPanelRowEntry = ({ id, start, end, children }) => {
+  const gridArea = `1 / ${start} / 1 / ${end}`;
+
+  const onDragStart = (evt) => {
+    evt.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ source: id })
+    );
+  };
+
+  return (
+    <div
+      className={style.entry}
+      style={{
+        gridArea,
+      }}
+      draggable
+      onDragStart={onDragStart}
+    >
+      {children}
     </div>
   );
 };
@@ -68,7 +100,9 @@ const RightPane = ({ items, columns }) => {
   ));
 
   const rows = items.map((item) => (
-    <RightPaneRow key={item.id} columns={columns} {...item} />
+    <RightPaneRow key={item.id} columns={columns}>
+      <RightPanelRowEntry {...item}>{item.id}</RightPanelRowEntry>
+    </RightPaneRow>
   ));
 
   return (

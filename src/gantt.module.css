@@ -58,6 +58,10 @@
   position: relative;
 }
 
+.gantt .right_pane .left_pane_row__hovered {
+  background: #c1c6e6;
+}
+
 .gantt .right_pane .row .entry {
   background: #eeeeee;
   padding: 0.1rem 0.5rem;
