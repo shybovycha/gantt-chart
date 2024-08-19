@@ -22,8 +22,6 @@ const LeftPane = ({ items }) => {
 };
 
 const RightPaneRow = ({ id, columns, children }) => {
-  const gridTemplate = `auto / repeat(${columns}, 1fr)`;
-
   const [hover, setHover] = useState(false);
 
   const onEnter = (e) => {
@@ -40,9 +38,6 @@ const RightPaneRow = ({ id, columns, children }) => {
       className={classnames(style.row, {
         [style.left_pane_row__hovered]: hover,
       })}
-      style={{
-        gridTemplate,
-      }}
       onDragEnter={onEnter}
       onDragLeave={onLeave}
     >
@@ -52,8 +47,6 @@ const RightPaneRow = ({ id, columns, children }) => {
 };
 
 const RightPanelRowEntry = ({ id, start, end, children }) => {
-  const gridArea = `1 / ${start} / 1 / ${end}`;
-
   const onDragStart = (evt) => {
     evt.dataTransfer.setData(
       "application/json",
@@ -65,7 +58,8 @@ const RightPanelRowEntry = ({ id, start, end, children }) => {
     <div
       className={style.entry}
       style={{
-        gridArea,
+        "--col-start": start,
+        "--col-end": end,
       }}
       draggable
       onDragStart={onDragStart}
@@ -75,19 +69,8 @@ const RightPanelRowEntry = ({ id, start, end, children }) => {
   );
 };
 
-const RightPaneHeaderRow = ({ columns, children }) => {
-  const gridTemplate = `auto / repeat(${columns}, 1fr)`;
-
-  return (
-    <div
-      className={style.right_pane_header_row}
-      style={{
-        gridTemplate,
-      }}
-    >
-      {children}
-    </div>
-  );
+const RightPaneHeaderRow = ({ children }) => {
+  return <div className={style.right_pane_header_row}>{children}</div>;
 };
 
 const RightPaneHeader = ({ children }) => {
@@ -106,8 +89,8 @@ const RightPane = ({ items, columns }) => {
   ));
 
   return (
-    <div className={style.right_pane}>
-      <RightPaneHeaderRow columns={columns}>{columnHeaders}</RightPaneHeaderRow>
+    <div className={style.right_pane} style={{ "--columns": columns }}>
+      <RightPaneHeaderRow>{columnHeaders}</RightPaneHeaderRow>
       <div className={style.right_pane_rows}>{rows}</div>
     </div>
   );
