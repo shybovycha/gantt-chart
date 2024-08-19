@@ -83,9 +83,9 @@ const RightPaneHeader = ({ children }) => {
   return <div className={style.right_pane_header}>{children}</div>;
 };
 
-const RightPane = ({ items, columns }) => {
+const RightPane = ({ items, columns, scaleLabel }) => {
   const columnHeaders = [...Array(columns)].map((_, idx) => (
-    <RightPaneHeader>{idx + 1}</RightPaneHeader>
+    <RightPaneHeader>{scaleLabel(idx)}</RightPaneHeader>
   ));
 
   const rows = items.map((item) => (
@@ -170,9 +170,10 @@ interface GanttChartItem {
 interface GanttChartProps {
   items: GanttChartItem[];
   scale: (item: GanttChartItem) => { start: number; end: number };
+  scaleLabel: (column: number) => React.Element;
 }
 
-export const Gantt = ({ items, scale }: GanttChartProps) => {
+export const Gantt = ({ items, scale, scaleLabel }: GanttChartProps) => {
   const itemList = flattenTree(items).map((item) => ({
     ...item,
     ...scale(item),
@@ -186,7 +187,7 @@ export const Gantt = ({ items, scale }: GanttChartProps) => {
   return (
     <div className={style.gantt}>
       <LeftPane items={itemList} />
-      <RightPane items={itemList} columns={columns} />
+      <RightPane items={itemList} columns={columns} scaleLabel={scaleLabel} />
     </div>
   );
 };
