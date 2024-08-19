@@ -13,16 +13,17 @@ export interface RightPaneProps {
   items: Partial<GanttChartItem>[];
   columns: number;
   scaleLabel: (column: number) => React.Element;
+  barLabel?: (item: GanttChartItem) => React.Element;
 }
 
-export const RightPane = ({ items, columns, scaleLabel }: RightPaneProps) => {
+export const RightPane = ({ items, columns, scaleLabel, barLabel }: RightPaneProps) => {
   const columnHeaders = [...Array(columns)].map((_, idx) => (
     <RightPaneHeader>{scaleLabel(idx)}</RightPaneHeader>
   ));
 
   const rows = items.map((item) => (
     <RightPaneRow key={item.id} columns={columns}>
-      <RightPaneRowEntry {...item}>{item.id}</RightPaneRowEntry>
+      <RightPaneRowEntry {...item}>{barLabel ? barLabel(item) : <>{item.id}</>}</RightPaneRowEntry>
     </RightPaneRow>
   ));
 

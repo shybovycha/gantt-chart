@@ -12,11 +12,17 @@ import type { GanttChartItem } from "./types";
 
 export interface GanttChartProps {
   items: GanttChartItem[];
+  barLabel: (item: GanttChartItem) => React.Element;
   scale: (item: GanttChartItem) => { start: number; end: number };
   scaleLabel: (column: number) => React.Element;
 }
 
-export const Chart = ({ items, scale, scaleLabel }: GanttChartProps) => {
+export const Chart = ({
+  items,
+  barLabel,
+  scale,
+  scaleLabel,
+}: GanttChartProps) => {
   const itemList = flattenTree(items).map((item) => ({
     ...item,
     ...scale(item),
@@ -30,7 +36,12 @@ export const Chart = ({ items, scale, scaleLabel }: GanttChartProps) => {
   return (
     <div className={style.gantt}>
       <LeftPane items={itemList} />
-      <RightPane items={itemList} columns={columns} scaleLabel={scaleLabel} />
+      <RightPane
+        items={itemList}
+        columns={columns}
+        scaleLabel={scaleLabel}
+        barLabel={barLabel}
+      />
     </div>
   );
 };

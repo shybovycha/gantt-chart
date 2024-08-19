@@ -40,7 +40,7 @@ export const data = [
   },
   {
     id: 7,
-    name: "story 4",
+    name: '<i style="font-family: \'FontAwesome\';" class="fa fa-car"></i>&nbsp;story with FontAwesome',
     parent: 2,
     start: 4,
     end: 6,
@@ -54,7 +54,7 @@ export const data = [
   },
   {
     id: 9,
-    name: "lorem ipsum dolor atata",
+    name: 'inline <em><b style="color: #5ebebe">CSS</b> color</em> <u style="border: 1px dashed #bebefe; padding: 2px; border-radius: 2px">works</u>',
     parent: 5,
     start: 5,
     end: 6,

@@ -10,7 +10,7 @@ export const LeftPaneRow = ({ level, name }: LeftPaneRowProps) => {
 
   return (
     <div className={style.row} style={{ "--label-padding": nestingPadding }}>
-      {name}
+      <span dangerouslySetInnerHTML={{__html: name}}></span>
     </div>
   );
 };
