@@ -1,6 +1,6 @@
 import "./styles.css";
 
-import { Gantt } from "./Gantt";
+import { Chart } from "./GanttChart";
 
 import { data } from "./data";
 
@@ -26,5 +26,5 @@ export default function App() {
 
   const scaleLabel = (col) => months[col % 12];
 
-  return <Gantt items={data} scale={scale} scaleLabel={scaleLabel} />;
+  return <Chart items={data} scale={scale} scaleLabel={scaleLabel} />;
 }
