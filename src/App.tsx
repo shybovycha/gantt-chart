@@ -5,5 +5,9 @@ import { Gantt } from "./Gantt";
 import { data } from "./data";
 
 export default function App() {
-  return <Gantt items={data} />;
+  const scale = ({ start, end }) => {
+    return { start: start * 2, end: end * 2 };
+  };
+
+  return <Gantt items={data} scale={scale} />;
 }

@@ -1,6 +1,6 @@
 .gantt {
   display: grid;
-  grid-template: 1fr / auto 1fr;
+  grid-template: 1fr / auto minmax(0, 1fr);
   grid-template-areas: "left right";
   width: 100%;
 }
@@ -23,6 +23,10 @@
   grid-area: corner;
 }
 
+.gantt .left_pane .row {
+  padding-left: var(--label-padding, 0);
+}
+
 .gantt .right_pane {
   display: grid;
   grid-template: auto 1fr / 1fr;
@@ -32,16 +36,16 @@
 }
 
 .gantt .right_pane .right_pane_rows {
-  width: 1000px; /*temp*/
   display: grid;
   grid-area: rows;
+  width: 2000px; /*temp*/
 }
 
 .gantt .right_pane .right_pane_header_row {
   display: grid;
   grid-area: scale;
-
   grid-template: auto / repeat(var(--columns, 1), 1fr);
+  width: 2000px; /*temp*/
 }
 
 .gantt .row:first-child {
