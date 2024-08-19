@@ -35,14 +35,14 @@ export const data = [
     id: 6,
     name: "story 3",
     parent: 1,
-    start: 5,
-    end: 6,
+    start: 3,
+    end: 7,
   },
   {
     id: 7,
     name: "story 4",
     parent: 2,
-    start: 5,
+    start: 4,
     end: 6,
   },
   {

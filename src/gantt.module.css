@@ -37,9 +37,15 @@
   grid-area: rows;
 }
 
-.gantt .right_pane .right_pane_header {
+.gantt .right_pane .right_pane_header_row {
   display: grid;
   grid-area: scale;
+}
+
+.gantt .right_pane .right_pane_header_row .right_pane_header {
+  display: grid;
+  align-items: center;
+  text-align: center;
 }
 
 .gantt .row {
@@ -53,8 +59,10 @@
 }
 
 .gantt .right_pane .row .entry {
-  /* position: absolute; */
   background: #eeeeee;
   padding: 0.1rem 0.5rem;
-  border-radius: 0.4rem;
+  border-radius: 0.5rem;
+
+  align-items: center;
+  text-align: center;
 }

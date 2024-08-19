@@ -43,28 +43,38 @@ const RightPaneRow = ({ id, name, columns, start, end }) => {
   );
 };
 
-const RightPane = ({ items, columns }) => {
+const RightPaneHeaderRow = ({ columns, children }) => {
   const gridTemplate = `auto / repeat(${columns}, 1fr)`;
 
+  return (
+    <div
+      className={style.right_pane_header_row}
+      style={{
+        gridTemplate,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+const RightPaneHeader = ({ children }) => {
+  return <div className={style.right_pane_header}>{children}</div>;
+};
+
+const RightPane = ({ items, columns }) => {
   const columnHeaders = [...Array(columns)].map((_, idx) => (
-    <div>{idx + 1}</div>
+    <RightPaneHeader>{idx + 1}</RightPaneHeader>
+  ));
+
+  const rows = items.map((item) => (
+    <RightPaneRow key={item.id} columns={columns} {...item} />
   ));
 
   return (
     <div className={style.right_pane}>
-      <div
-        className={style.right_pane_header}
-        style={{
-          gridTemplate,
-        }}
-      >
-        {columnHeaders}
-      </div>
-      <div className={style.right_pane_rows}>
-        {items.map((item) => (
-          <RightPaneRow key={item.id} columns={columns} {...item} />
-        ))}
-      </div>
+      <RightPaneHeaderRow columns={columns}>{columnHeaders}</RightPaneHeaderRow>
+      <div className={style.right_pane_rows}>{rows}</div>
     </div>
   );
 };
